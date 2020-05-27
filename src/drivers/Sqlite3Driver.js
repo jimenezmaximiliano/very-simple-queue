@@ -5,10 +5,15 @@
 
 class Sqlite3Driver {
   #parseJobResult
+
   #connection
+
   #getConnection
+
   #run
+
   #getRow
+
   #reserveJob
 
   /** @type GetCurrentTimestamp */
@@ -36,7 +41,7 @@ class Sqlite3Driver {
       job.payload = JSON.parse(job.payload);
 
       return job;
-    }
+    };
 
     /**
      * @returns {Promise<Object>}
@@ -55,7 +60,7 @@ class Sqlite3Driver {
           reject(error);
         });
       });
-    }
+    };
 
     /**
      * @param {string} query
@@ -85,7 +90,6 @@ class Sqlite3Driver {
      * @returns {Promise<Job|null>}
      */
     this.#reserveJob = async (selectQuery, params) => {
-
       try {
         await this.#run('BEGIN EXCLUSIVE TRANSACTION;');
         const rawJob = await this.#getRow(selectQuery, params);
@@ -105,7 +109,7 @@ class Sqlite3Driver {
         await this.#run('ROLLBACK TRANSACTION;');
         return null;
       }
-    }
+    };
   }
 
   /**
