@@ -11,23 +11,27 @@ const QueueClient = require('./QueueClient');
 const Sqlite3Driver = require('./drivers/Sqlite3Driver');
 
 class VerySimpleQueue {
-
   #supportedDrivers
+
   /** @type {QueueClient} */
   #queueClient
 
   constructor(driverConfig) {
-
     this.#supportedDrivers = ['sqlite3'];
 
     if (!this.#supportedDrivers.includes(driverConfig.driver)) {
-      throw "Driver not supported";
+      throw new Error('Driver not supported');
     }
 
     const drivers = {};
 
     drivers.sqlite3 = () => {
-      const driver = new Sqlite3Driver(util.promisify, getCurrentTimestamp, sqlite3, driverConfig.filePath);
+      const driver = new Sqlite3Driver(
+        util.promisify,
+        getCurrentTimestamp,
+        sqlite3,
+        driverConfig.filePath,
+      );
       this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp);
     };
 

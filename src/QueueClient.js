@@ -10,10 +10,13 @@
 class QueueClient {
   /** @type {Driver} */
   #dbDriver
+
   /** @type {UuidGenerator} */
   #uuidGenerator
+
   /** @type {GetCurrentTimestamp} */
   #getCurrentTimestamp
+
   #handleJob
 
   /**
@@ -83,7 +86,7 @@ class QueueClient {
   async handleJob(jobHandler, queue = 'default') {
     const job = await this.#dbDriver.getJob(queue);
 
-    return await this.#handleJob(job, jobHandler);
+    return this.#handleJob(job, jobHandler);
   }
 
   /**
@@ -94,7 +97,7 @@ class QueueClient {
   async handleJobByUuid(jobHandler, jobUuid) {
     const job = await this.#dbDriver.getJobByUuid(jobUuid);
 
-    return await this.#handleJob(job, jobHandler);
+    return this.#handleJob(job, jobHandler);
   }
 
   /**
@@ -105,7 +108,7 @@ class QueueClient {
   async handleFailedJob(jobHandler, queue = 'default') {
     const job = await this.#dbDriver.getFailedJob(queue);
 
-    return await this.#handleJob(job, jobHandler);
+    return this.#handleJob(job, jobHandler);
   }
 }
 
