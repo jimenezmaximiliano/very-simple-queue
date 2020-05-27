@@ -1,21 +1,21 @@
-# Simple Job Queue
+# Very Simple Queue
 
-Simple Job Queue with a simple API and support for sqlite3 (additional drivers on the way)
+Very Simple Queue is a job queue with a simple API and support for sqlite3 (additional drivers on the way)
 
 ## Installation
 
 ```bash
-npm install simple-job-queue
+npm install very-simple-queue
 ```
 
 ## Usage
 
-### Instantiating the SimpleJobQueue facade
+### Instantiating the VerySimpleQueue facade
 
 ```javascript
-const SimpleJobQueue = require('simple-job-queue');
+const VerySimpleQueue = require('very-simple-queue');
 
-const queue = new SimpleJobQueue({
+const queue = new VerySimpleQueue({
   driver: 'sqlite3',
   filePath: ':memory:',
 });

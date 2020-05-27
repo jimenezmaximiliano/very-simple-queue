@@ -1,8 +1,8 @@
 {
-  "name": "simple-job-queue",
+  "name": "very-simple-queue",
   "version": "0.9.0",
   "author": "Maximiliano Jimenez <jimenez@maximiliano.com.ar>",
-  "description": "Simple Job Queue with a simple API and support for sqlite3",
+  "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3 (additional drivers on the way)",
   "keywors": [
     "queue",
     "job",
@@ -11,21 +11,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jimenezmaximiliano/simple-job-queue.git"
+    "url": "git+https://github.com/jimenezmaximiliano/very-simple-queue.git"
   },
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jimenezmaximiliano/simple-job-queue/issues"
+    "url": "https://github.com/jimenezmaximiliano/very-simple-queue/issues"
   },
-
-  "homepage": "https://github.com/jimenezmaximiliano/simple-job-queue",
-
-
+  "homepage": "https://github.com/jimenezmaximiliano/very-simple-queue",
   "scripts": {
     "test": "node ./tests/integration/testQueueClient.js"
   },
-
-
   "dependencies": {
     "uuid": "^8.0.0",
     "sqlite3": "^4.2.0"

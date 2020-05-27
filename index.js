@@ -1,3 +1,3 @@
-const SimpleJobQueue = require('./src/SimpleJobQueue');
+const VerySimpleQueue = require('./src/VerySimpleQueue');
 
-module.exports = SimpleJobQueue;
+module.exports = VerySimpleQueue;
