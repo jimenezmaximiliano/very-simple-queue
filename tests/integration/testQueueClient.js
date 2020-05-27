@@ -9,7 +9,7 @@ const getCurrentTimestamp = require('../../src/helpers/getCurrentTimestamp');
 const drivers = [
   {
     name: 'Sqlite3 driver',
-    instance: new SqlDriver(util.promisify, getCurrentTimestamp, sqlite3, './asdf.sqlite3'),
+    instance: new SqlDriver(util.promisify, getCurrentTimestamp, sqlite3, ':memory:'),
     reset: () => this.instance = new SqlDriver(util.promisify, getCurrentTimestamp, sqlite3, ':memory:'),
   },
 ];
