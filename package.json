@@ -25,6 +25,9 @@
     "uuid": "^8.0.0",
     "sqlite3": "^4.2.0"
   },
+  "engines" : {
+    "node" : ">=12"
+  },
   "devDependencies": {
     "tape": "^5.0.0",
     "eslint": "^6.8.0",
