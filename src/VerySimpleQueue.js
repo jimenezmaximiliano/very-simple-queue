@@ -10,7 +10,7 @@ const getCurrentTimestamp = require('./helpers/getCurrentTimestamp');
 const QueueClient = require('./QueueClient');
 const Sqlite3Driver = require('./drivers/Sqlite3Driver');
 
-class SimpleJobQueue {
+class VerySimpleQueue {
 
   #supportedDrivers
   /** @type {QueueClient} */
@@ -78,4 +78,4 @@ class SimpleJobQueue {
   }
 }
 
-module.exports = SimpleJobQueue;
+module.exports = VerySimpleQueue;
