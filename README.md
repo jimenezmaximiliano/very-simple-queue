@@ -1,4 +1,5 @@
 # Very Simple Queue
+![](https://github.com/actions/jimenezmaximiliano/very-simple-queue/CI/badge.svg)
 
 Very Simple Queue is a job queue with a simple API and support for sqlite3 (additional drivers on the way)
 
