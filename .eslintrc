@@ -1,0 +1,9 @@
+{
+  "extends": "airbnb",
+  "parser":"babel-eslint",
+  "rules": {
+    "class-methods-use-this": "warn",
+    "no-restricted-syntax": "warn",
+    "no-await-in-loop": "warn"
+  }
+}
