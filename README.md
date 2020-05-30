@@ -18,7 +18,7 @@ const VerySimpleQueue = require('very-simple-queue');
 
 const queue = new VerySimpleQueue({
   driver: 'sqlite3',
-  filePath: ':memory:',
+  filePath: '/tmp/testdb.sqlite3',
 });
 
 ```

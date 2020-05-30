@@ -1,13 +1,16 @@
 {
   "name": "very-simple-queue",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "author": "Maximiliano Jimenez <jimenez@maximiliano.com.ar>",
   "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3 (additional drivers on the way)",
   "keywords": [
     "queue",
     "job",
     "sqlite3",
-    "persistent"
+    "persistent",
+    "concurrent",
+    "concurrency",
+    "threads"
   ],
   "repository": {
     "type": "git",
@@ -19,7 +22,9 @@
   },
   "homepage": "https://github.com/jimenezmaximiliano/very-simple-queue",
   "scripts": {
-    "test": "node ./tests/integration/testQueueClient.js"
+    "test": "node ./tests/integration/testQueueClient.js",
+    "test-manual-concurrency-single-thread": "./tests/manual/concurrency/singleThread.sh",
+    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh"
   },
   "dependencies": {
     "uuid": "^8.0.0",

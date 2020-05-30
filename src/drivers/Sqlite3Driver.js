@@ -6,9 +6,11 @@
 class Sqlite3Driver {
   #parseJobResult
 
-  #connection
+  #getNewConnection
 
-  #getConnection
+  #sharedConnection
+
+  #setSharedConnection
 
   #run
 
@@ -46,69 +48,73 @@ class Sqlite3Driver {
     /**
      * @returns {Promise<Object>}
      */
-    this.#getConnection = () => {
-      if (this.#connection) {
-        return this.#connection;
-      }
+    this.#getNewConnection = () => new Promise((resolve, reject) => {
+      const newConnection = new sqlite3.Database(fileName, sqlite3.OPEN_READWRITE, (error) => {
+        if (!error) {
+          resolve(newConnection);
+        }
 
-      return new Promise((resolve, reject) => {
-        this.#connection = new sqlite3.Database(fileName, sqlite3.OPEN_READWRITE, (error) => {
-          if (!error) {
-            resolve(this.#connection);
-          }
-
-          reject(error);
-        });
+        reject(error);
       });
-    };
+    });
 
     /**
      * @param {string} query
      * @param {Object} params
+     * @param {Object|null}connection
      * @returns {Promise<void>}
      */
-    this.#run = async (query, params) => {
-      await this.#getConnection();
-      const run = promisify(this.#connection.run).bind(this.#connection);
+    this.#run = async (query, params, connection = null) => {
+      const connectionToUse = connection || this.#sharedConnection;
+      const run = promisify(connectionToUse.run).bind(connectionToUse);
       await run(query, params);
     };
 
     /**
      * @param {string} query
      * @param {Object} params
+     * @param {Object|null} connection
      * @returns {Promise<Object>}
      */
-    this.#getRow = async (query, params) => {
-      await this.#getConnection();
-      const get = promisify(this.#connection.get).bind(this.#connection);
-      return await get(query, params);
+    this.#getRow = async (query, params, connection = null) => {
+      const connectionToUse = connection || this.#sharedConnection;
+      const get = promisify(connectionToUse.get).bind(connectionToUse);
+      return get(query, params);
     };
 
     /**
-     * @param selectQuery
-     * @param params
+     * @param {Object} connection
+     * @param {string} selectQuery
+     * @param {Object} params
      * @returns {Promise<Job|null>}
      */
-    this.#reserveJob = async (selectQuery, params) => {
+    this.#reserveJob = async (connection, selectQuery, params) => {
       try {
-        await this.#run('BEGIN EXCLUSIVE TRANSACTION;');
-        const rawJob = await this.#getRow(selectQuery, params);
+        await this.#run('BEGIN EXCLUSIVE TRANSACTION;', {}, connection);
+        const rawJob = await this.#getRow(selectQuery, params, connection);
 
         if (!rawJob) {
-          await this.#run('COMMIT TRANSACTION;');
+          await this.#run('COMMIT TRANSACTION;', {}, connection);
           return null;
         }
 
         const job = this.#parseJobResult(rawJob);
         const timestamp = this.#getCurrentTimestamp();
-        await this.#run(`UPDATE jobs SET reserved_at = ${timestamp} WHERE uuid = "${job.uuid}"`);
-        await this.#run('COMMIT TRANSACTION;');
-
+        await this.#run(`UPDATE jobs SET reserved_at = ${timestamp} WHERE uuid = "${job.uuid}"`, {}, connection);
+        await this.#run('COMMIT TRANSACTION;', {}, connection);
         return job;
       } catch (error) {
-        await this.#run('ROLLBACK TRANSACTION;');
+        await this.#run('ROLLBACK TRANSACTION;', {}, connection);
         return null;
       }
+    };
+
+    this.#setSharedConnection = async () => {
+      if (this.#sharedConnection) {
+        return;
+      }
+
+      this.#sharedConnection = await this.#getNewConnection();
     };
   }
 
@@ -116,6 +122,7 @@ class Sqlite3Driver {
    * @returns {Promise<void>}
    */
   async createJobsDbStructure() {
+    await this.#setSharedConnection();
     const query = 'CREATE TABLE IF NOT EXISTS jobs('
       + 'uuid TEXT PRIMARY KEY,'
       + 'queue TEXT NOT NULL,'
@@ -133,6 +140,7 @@ class Sqlite3Driver {
    * @returns {Promise<void>}
    */
   async storeJob(job) {
+    await this.#setSharedConnection();
     const query = 'INSERT INTO jobs(uuid, queue, payload, created_at) VALUES (?, ?, ?, ?)';
 
     await this.#run(query, [
@@ -148,7 +156,9 @@ class Sqlite3Driver {
    * @returns {Promise<Job|null>}
    */
   async getJob(queue) {
-    return await this.#reserveJob('SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL LIMIT 1', [queue]);
+    const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL LIMIT 1';
+    const connection = await this.#getNewConnection();
+    return this.#reserveJob(connection, query, [queue]);
   }
 
   /**
@@ -157,8 +167,9 @@ class Sqlite3Driver {
    */
   async getJobByUuid(jobUuid) {
     const query = 'SELECT * FROM jobs WHERE uuid = ? AND reserved_at IS NULL LIMIT 1';
+    const connection = await this.#getNewConnection();
 
-    return await this.#reserveJob(query, [jobUuid]);
+    return this.#reserveJob(connection, query, [jobUuid]);
   }
 
   /**
@@ -166,9 +177,10 @@ class Sqlite3Driver {
    * @returns {Promise<Job|null>}
    */
   async getFailedJob(queue) {
+    const connection = await this.#getNewConnection();
     const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NOT NULL AND reserved_at IS NULL LIMIT 1';
 
-    return await this.#reserveJob(query, [queue]);
+    return this.#reserveJob(connection, query, [queue]);
   }
 
   /**
@@ -176,6 +188,7 @@ class Sqlite3Driver {
    * @returns {Promise<void>}
    */
   async deleteJob(jobUuid) {
+    await this.#setSharedConnection();
     await this.#run('DELETE FROM jobs WHERE reserved_at IS NOT NULL AND uuid = ?', [jobUuid]);
   }
 
@@ -185,7 +198,16 @@ class Sqlite3Driver {
    */
   async markJobAsFailed(jobUuid) {
     const timestamp = this.#getCurrentTimestamp();
+    await this.#setSharedConnection();
     await this.#run('UPDATE jobs SET failed_at = ?, reserved_at = NULL WHERE uuid = ?', [timestamp, jobUuid]);
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async deleteAllJobs() {
+    await this.#setSharedConnection();
+    await this.#run('DELETE FROM jobs');
   }
 }
 
