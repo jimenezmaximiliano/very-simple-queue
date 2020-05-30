@@ -21,7 +21,7 @@
  * @returns {string}
  */
 
-  /**
+/**
  * Driver
  * @typedef {Object} Driver
  * @property {CreateJobsDbStructure} createJobsDbStructure
@@ -33,50 +33,56 @@
  * @property {MarkJobAsFailed} markJobAsFailed
  */
 
-    /**
+/**
      * Driver - CreateJobsDbStructure
      * @typedef {Function} CreateJobsDbStructure
      * @returns {Promise<void>}
      */
 
-    /**
+/**
      * Driver - StoreJob
      * @typedef {Function} StoreJob
      * @param {Job} job
      * @returns {Promise<void>}
      */
 
-    /**
+/**
      * Driver - GetJob
      * @typedef {Function} GetJob
      * @param {string} queue
      * @returns {Promise<Job|null>}
      */
 
-    /**
+/**
      * Driver - GetJobByUuid
      * @typedef {Function} GetJobByUuid
      * @param {string} jobUuid
      * @returns {Promise<Job|null>}
      */
 
-    /**
+/**
      * Driver - GetFailedJob
      * @typedef {Function} GetFailedJob
      * @param {string} queue
      * @returns {Promise<Job|null>}
      */
 
-    /**
+/**
      * Driver - DeleteJob
      * @typedef {Function} DeleteJob
      * @param {string} jobUuid
      * @returns {Promise<void>}
      */
 
-    /**
+/**
      * Driver - MarkJobAsFailed
      * @typedef {Function} MarkJobAsFailed
      * @param {string} jobUuid
+     * @returns {Promise<void>}
+     */
+
+/**
+     * Driver - deleteAllJobs
+     * @typedef {Function} deleteAllJobs
      * @returns {Promise<void>}
      */

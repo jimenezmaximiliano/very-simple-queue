@@ -8,17 +8,16 @@ const QueueClient = require('../../src/QueueClient');
 const getCurrentTimestamp = require('../../src/helpers/getCurrentTimestamp');
 
 const sqlite3FilePath = './tests/integration/temp/testdb.sqlite3';
+fs.closeSync(fs.openSync(sqlite3FilePath, 'w'));
 
 const drivers = [
   {
     name: 'Sqlite3 driver',
     resetAndGetInstance: () => {
-      try {
-        fs.unlinkSync(sqlite3FilePath);
-      } catch (error) {}
-      fs.closeSync(fs.openSync(sqlite3FilePath, 'w'));
+      const instance = new SqlDriver(util.promisify, getCurrentTimestamp, sqlite3, sqlite3FilePath);
+      instance.deleteAllJobs();
 
-      return new SqlDriver(util.promisify, getCurrentTimestamp, sqlite3, sqlite3FilePath);
+      return instance;
     },
     cleanUp: () => fs.unlinkSync(sqlite3FilePath),
   },

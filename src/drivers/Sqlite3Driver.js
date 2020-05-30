@@ -201,6 +201,14 @@ class Sqlite3Driver {
     await this.#setSharedConnection();
     await this.#run('UPDATE jobs SET failed_at = ?, reserved_at = NULL WHERE uuid = ?', [timestamp, jobUuid]);
   }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async deleteAllJobs() {
+    await this.#setSharedConnection();
+    await this.#run('DELETE FROM jobs');
+  }
 }
 
 module.exports = Sqlite3Driver;
