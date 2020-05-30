@@ -19,7 +19,9 @@
   },
   "homepage": "https://github.com/jimenezmaximiliano/very-simple-queue",
   "scripts": {
-    "test": "node ./tests/integration/testQueueClient.js"
+    "test": "node ./tests/integration/testQueueClient.js",
+    "test-manual-concurrency-single-thread": "./tests/manual/concurrency/singleThread.sh",
+    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh"
   },
   "dependencies": {
     "uuid": "^8.0.0",

@@ -26,6 +26,10 @@ class VerySimpleQueue {
     const drivers = {};
 
     drivers.sqlite3 = () => {
+      if (driverConfig.filePath === ':memory:') {
+        throw new Error(':memory: is not supported');
+      }
+
       const driver = new Sqlite3Driver(
         util.promisify,
         getCurrentTimestamp,
