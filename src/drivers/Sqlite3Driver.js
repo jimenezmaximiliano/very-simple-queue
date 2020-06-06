@@ -1,8 +1,14 @@
 /**
- * @typedef {import('../types').Job}
+ * @typedef {import('../types/Job').Job}
+ * @typedef {import('../types/Driver').Driver}
+ * @typedef {import('../types/Sqlite3DriverConfig').Sqlite3DriverConfig}
  * @typedef {import('../helpers/getCurrentTimestamp').getCurrentTimestamp} GetCurrentTimestamp
  */
 
+/**
+ * @class
+ * @implements Driver
+ */
 class Sqlite3Driver {
   #parseJobResult
 
@@ -25,9 +31,9 @@ class Sqlite3Driver {
    * @param {Function} promisify
    * @param {GetCurrentTimestamp} getCurrentTimestamp
    * @param {Object} sqlite3
-   * @param {string} fileName
+   * @param {Sqlite3DriverConfig} driverConfig
    */
-  constructor(promisify, getCurrentTimestamp, sqlite3, fileName) {
+  constructor(promisify, getCurrentTimestamp, sqlite3, driverConfig) {
     this.#getCurrentTimestamp = getCurrentTimestamp;
 
     /**
@@ -49,13 +55,17 @@ class Sqlite3Driver {
      * @returns {Promise<Object>}
      */
     this.#getNewConnection = () => new Promise((resolve, reject) => {
-      const newConnection = new sqlite3.Database(fileName, sqlite3.OPEN_READWRITE, (error) => {
-        if (!error) {
-          resolve(newConnection);
-        }
+      const newConnection = new sqlite3.Database(
+        driverConfig.filePath,
+        sqlite3.OPEN_READWRITE,
+        (error) => {
+          if (!error) {
+            resolve(newConnection);
+          }
 
-        reject(error);
-      });
+          reject(error);
+        },
+      );
     });
 
     /**
@@ -158,7 +168,11 @@ class Sqlite3Driver {
   async getJob(queue) {
     const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL LIMIT 1';
     const connection = await this.#getNewConnection();
-    return this.#reserveJob(connection, query, [queue]);
+    const result = this.#reserveJob(connection, query, [queue]);
+
+    await connection.close();
+
+    return result;
   }
 
   /**
@@ -169,7 +183,11 @@ class Sqlite3Driver {
     const query = 'SELECT * FROM jobs WHERE uuid = ? AND reserved_at IS NULL LIMIT 1';
     const connection = await this.#getNewConnection();
 
-    return this.#reserveJob(connection, query, [jobUuid]);
+    const result = this.#reserveJob(connection, query, [jobUuid]);
+
+    await connection.close();
+
+    return result;
   }
 
   /**
@@ -180,7 +198,11 @@ class Sqlite3Driver {
     const connection = await this.#getNewConnection();
     const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NOT NULL AND reserved_at IS NULL LIMIT 1';
 
-    return this.#reserveJob(connection, query, [queue]);
+    const result = this.#reserveJob(connection, query, [queue]);
+
+    await connection.close();
+
+    return result;
   }
 
   /**
@@ -208,6 +230,13 @@ class Sqlite3Driver {
   async deleteAllJobs() {
     await this.#setSharedConnection();
     await this.#run('DELETE FROM jobs');
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async closeConnection() {
+    await this.#sharedConnection.close();
   }
 }
 

@@ -16,8 +16,7 @@ npm install very-simple-queue
 ```javascript
 const VerySimpleQueue = require('very-simple-queue');
 
-const queue = new VerySimpleQueue({
-  driver: 'sqlite3',
+const queue = new VerySimpleQueue('sqlite3', {
   filePath: '/tmp/testdb.sqlite3',
 });
 

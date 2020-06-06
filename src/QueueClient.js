@@ -1,12 +1,15 @@
 
 /**
- * @typedef {import('./types').Job}
- * @typedef {import('./types').JobHandler}
- * @typedef {import('./types').Driver}
- * @typedef {import('./types').UuidGenerator}
+ * @typedef {import('./types/Job').Job}
+ * @typedef {import('./types/JobHandler').JobHandler}
+ * @typedef {import('./types/Driver').Driver}
+ * @typedef {import('./types/UuidGenerator').UuidGenerator}
  * @typedef {import('./helpers/getCurrentTimestamp').getCurrentTimestamp } GetCurrentTimestamp
  */
 
+/**
+ * @class
+ */
 class QueueClient {
   /** @type {Driver} */
   #dbDriver
@@ -109,6 +112,13 @@ class QueueClient {
     const job = await this.#dbDriver.getFailedJob(queue);
 
     return this.#handleJob(job, jobHandler);
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async closeConnection() {
+    await this.#dbDriver.closeConnection();
   }
 }
 

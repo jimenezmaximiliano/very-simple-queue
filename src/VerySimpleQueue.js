@@ -1,25 +1,34 @@
 /**
  * @typedef {import('./QueueClient').QueueClient}
  */
-
 const util = require('util');
 const sqlite3 = require('sqlite3');
 const uuidGenerator = require('uuid').v4;
+const redis = require('redis');
+const RedLock = require('redlock');
 
 const getCurrentTimestamp = require('./helpers/getCurrentTimestamp');
 const QueueClient = require('./QueueClient');
 const Sqlite3Driver = require('./drivers/Sqlite3Driver');
+const RedisDriver = require('./drivers/RedisDriver');
 
+/**
+ * @class
+ */
 class VerySimpleQueue {
   #supportedDrivers
 
   /** @type {QueueClient} */
   #queueClient
 
-  constructor(driverConfig) {
-    this.#supportedDrivers = ['sqlite3'];
+  /**
+   * @param {string} driverName
+   * @param {Sqlite3DriverConfig | Object} driverConfig
+   */
+  constructor(driverName, driverConfig) {
+    this.#supportedDrivers = ['sqlite3', 'redis'];
 
-    if (!this.#supportedDrivers.includes(driverConfig.driver)) {
+    if (!this.#supportedDrivers.includes(driverName)) {
       throw new Error('Driver not supported');
     }
 
@@ -34,12 +43,24 @@ class VerySimpleQueue {
         util.promisify,
         getCurrentTimestamp,
         sqlite3,
-        driverConfig.filePath,
+        driverConfig,
       );
       this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp);
     };
 
-    drivers[driverConfig.driver]();
+    drivers.redis = () => {
+      const driver = new RedisDriver(
+        util.promisify,
+        getCurrentTimestamp,
+        redis,
+        driverConfig,
+        RedLock,
+      );
+
+      this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp);
+    };
+
+    drivers[driverName]();
   }
 
   /**
@@ -55,7 +76,7 @@ class VerySimpleQueue {
    * @returns {Promise<string>} - Created job uuid
    */
   async pushJob(payload, queue = 'default') {
-    return await this.#queueClient.pushJob(payload, queue);
+    return this.#queueClient.pushJob(payload, queue);
   }
 
   /**
@@ -64,7 +85,7 @@ class VerySimpleQueue {
    * @returns {Promise<*>}
    */
   async handleJob(jobHandler, queue = 'default') {
-    return await this.#queueClient.handleJob(jobHandler, queue);
+    return this.#queueClient.handleJob(jobHandler, queue);
   }
 
   /**
@@ -73,7 +94,7 @@ class VerySimpleQueue {
    * @returns {Promise<*>}
    */
   async handleJobByUuid(jobHandler, jobUuid) {
-    return await this.#queueClient.handleJobByUuid(jobHandler, jobUuid);
+    return this.#queueClient.handleJobByUuid(jobHandler, jobUuid);
   }
 
   /**
@@ -82,7 +103,14 @@ class VerySimpleQueue {
    * @returns {Promise<*>}
    */
   async handleFailedJob(jobHandler, queue = 'default') {
-    return await this.#queueClient.handleFailedJob(jobHandler, queue);
+    return this.#queueClient.handleFailedJob(jobHandler, queue);
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async closeConnection() {
+    await this.#queueClient.closeConnection();
   }
 }
 

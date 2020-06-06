@@ -10,3 +10,4 @@
 !package.json
 !.github
 !.gitignore
+!queue.sh
