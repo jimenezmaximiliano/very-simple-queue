@@ -24,7 +24,8 @@
   "scripts": {
     "test": "node ./tests/integration/testQueueClient.js",
     "test-manual-concurrency-single-thread": "./tests/manual/concurrency/singleThread.sh",
-    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh"
+    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh",
+    "docs": "./node_modules/jsdoc-to-markdown/bin/cli.js --heading-depth 3 --template README.hbs  --separators --example-lang js src/types/JobHandler.js src/VerySimpleQueue.js > README.md"
   },
   "dependencies": {
     "redis": "^3.0.2",
@@ -42,6 +43,7 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.19.0",
+    "jsdoc-to-markdown": "^6.0.1",
     "tape": "^5.0.0"
   },
   "main": "index.js",

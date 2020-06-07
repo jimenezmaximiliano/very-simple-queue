@@ -1,5 +1,9 @@
 /**
- * JobHandler
- * @typedef {Function} JobHandler
+ * @module JobHandler
+ */
+
+/**
+ * @typedef module:JobHandler
+ * @function
  * @param {Object} payload
  */
