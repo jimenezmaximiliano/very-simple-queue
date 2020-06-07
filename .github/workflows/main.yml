@@ -6,12 +6,21 @@ jobs:
     strategy:
       matrix:
         node: [ '12', '14' ]
-    name: Node ${{ matrix.node }} sample
+        redis: [ '3', '4', '5', '6' ]
+    name: Node ${{ matrix.node }} Redis ${{ matrix.redis }}
     steps:
-      - uses: actions/checkout@v2
+      - name: Setup Redis
+        uses: zhulik/redis-action@1.1.0
+        with:
+          redis version: ${{ matrix.redis }}
+          number of databases: 1
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Setup node
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: yarn
-      - run: yarn run test
+      - name: yarn
+        run: yarn
+      - name: yarn run test
+        run: yarn run test

@@ -1,13 +1,15 @@
-
-const sqlite3FilePath = './tests/manual/concurrency/db.sqlite3';
-
 const VerySimpleQueue = require('../../../src/VerySimpleQueue');
 
+const driver = process.argv[2];
 
-const queue = new VerySimpleQueue({
-  driver: 'sqlite3',
-  filePath: sqlite3FilePath,
-});
+let settings = {};
+
+if (driver === 'sqlite3') {
+  const sqlite3FilePath = './tests/manual/concurrency/db.sqlite3';
+  settings = { filePath: sqlite3FilePath };
+}
+
+const queue = new VerySimpleQueue(driver, settings);
 
 const createJobs = async () => {
   await queue.createJobsDbStructure();
@@ -17,6 +19,8 @@ const createJobs = async () => {
 
     console.log(`Pushed job ${i}`);
   }
+
+  await queue.closeConnection();
 };
 
 

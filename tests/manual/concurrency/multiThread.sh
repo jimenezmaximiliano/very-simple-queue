@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
-touch ./tests/manual/concurrency/db.sqlite3
-docker run --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/createJobs.js
-docker run -d --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/work.js workerA
-docker run -d --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/work.js workerB
-docker run -d --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/work.js workerC
-docker run -d --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/work.js workerD
-docker run -d --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/work.js workerE
-docker run -d --rm -it -v $(pwd):/app -w /app node:14 node --trace-warnings ./tests/manual/concurrency/work.js workerF
+if [[ "$1" == "redis" ]]; then
+    docker run -d -p 6379:6379 redis
+fi
+
+if [[ "$1" == "sqlite3" ]]; then
+  touch ./tests/manual/concurrency/db.sqlite3
+fi
+
+node --trace-warnings ./tests/manual/concurrency/createJobs.js $1
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerA &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerB &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerC &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerC &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerD &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerE &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerF &
+node --trace-warnings ./tests/manual/concurrency/work.js $1 workerG &

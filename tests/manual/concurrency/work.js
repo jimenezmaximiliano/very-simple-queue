@@ -1,20 +1,34 @@
-const sqlite3FilePath = './tests/manual/concurrency/db.sqlite3';
 const VerySimpleQueue = require('../../../src/VerySimpleQueue');
 
-const queue = new VerySimpleQueue({
-  driver: 'sqlite3',
-  filePath: sqlite3FilePath,
-});
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const driver = process.argv[2];
+
+let settings = {};
+
+if (driver === 'sqlite3') {
+  const sqlite3FilePath = './tests/manual/concurrency/db.sqlite3';
+  settings = { filePath: sqlite3FilePath };
+}
+
+const queue = new VerySimpleQueue(driver, settings);
 
 const handleJobs = async (worker) => {
   while (true) {
-    await queue.handleJob(async (payload) => {
+    const result = await queue.handleJob(async (payload) => {
       console.log(worker, payload.number);
+      return 1;
     });
+
+    if (!result) {
+      break;
+    }
   }
 };
 
-process.argv.splice(2).forEach(async (workerName) => {
+process.argv.splice(3).forEach(async (workerName) => {
   (async () => {
     await handleJobs(workerName);
   })();

@@ -3,7 +3,10 @@ const sqlite3 = require('sqlite3');
 const util = require('util');
 const fs = require('fs');
 const uuidGenerator = require('uuid').v4;
-const SqlDriver = require('../../src/drivers/Sqlite3Driver');
+const redis = require('redis');
+const RedLock = require('redlock');
+const Sqlite3Driver = require('../../src/drivers/Sqlite3Driver');
+const RedisDriver = require('../../src/drivers/RedisDriver');
 const QueueClient = require('../../src/QueueClient');
 const getCurrentTimestamp = require('../../src/helpers/getCurrentTimestamp');
 
@@ -13,76 +16,130 @@ fs.closeSync(fs.openSync(sqlite3FilePath, 'w'));
 const drivers = [
   {
     name: 'Sqlite3 driver',
-    resetAndGetInstance: () => {
-      const instance = new SqlDriver(util.promisify, getCurrentTimestamp, sqlite3, sqlite3FilePath);
-      instance.deleteAllJobs();
+    resetAndGetInstance: async () => {
+      const instance = new Sqlite3Driver(
+        util.promisify,
+        getCurrentTimestamp,
+        sqlite3,
+        { filePath: sqlite3FilePath },
+      );
+      await instance.createJobsDbStructure();
+      await instance.deleteAllJobs();
 
       return instance;
     },
-    cleanUp: () => fs.unlinkSync(sqlite3FilePath),
+    cleanUp: async () => {
+      fs.unlinkSync(sqlite3FilePath);
+    },
+  },
+  {
+    name: 'Redis driver',
+    resetAndGetInstance: async () => {
+      const instance = new RedisDriver(
+        util.promisify,
+        getCurrentTimestamp,
+        redis,
+        {},
+        RedLock,
+      );
+      await instance.deleteAllJobs();
+
+      return instance;
+    },
+    cleanUp: async () => {},
   },
 ];
 
 test.onFinish(() => {
-  drivers.forEach((driver) => driver.cleanUp());
+  drivers.forEach(async (driver) => driver.cleanUp());
 });
 
 drivers.forEach((driver) => {
   test(`[${driver.name}] push a job and handle it`, async (assert) => {
-    const driverInstance = driver.resetAndGetInstance();
+    const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
-    await queueClient.createJobsDbStructure();
     const jobUuid = await queueClient.pushJob({ name: 'Obladi' });
     await queueClient.handleJob((payload) => assert.equal(payload.name, 'Obladi'));
 
     assert.equal(typeof jobUuid === 'string', true);
+
+    await driverInstance.closeConnection();
   });
 
   test(`[${driver.name}] job is deleted after being handled`, async (assert) => {
-    const driverInstance = driver.resetAndGetInstance();
+    const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
-    await queueClient.createJobsDbStructure();
     await queueClient.pushJob({ name: 'Obladi' });
     await queueClient.handleJob((payload) => assert.equal(payload.name, 'Obladi'));
     await queueClient.handleJob((job) => assert.equal(job, null));
+    await driverInstance.closeConnection();
   });
 
   test(`[${driver.name}] the handler is not called when there aren't any jobs available`, async (assert) => {
-    const driverInstance = driver.resetAndGetInstance();
+    const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
-    await queueClient.createJobsDbStructure();
     await queueClient.handleJob(() => assert.fail('Job handler called'));
 
     assert.pass('Job handler not called');
+
+    await driverInstance.closeConnection();
   });
 
   test(`[${driver.name}] you get the return value of the job handler`, async (assert) => {
-    const driverInstance = driver.resetAndGetInstance();
+    const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
-    await queueClient.createJobsDbStructure();
     await queueClient.pushJob({ obladi: 'oblada' });
-    const result = await queueClient.handleJob((payload) => ({ obladi: 'oblada' }));
+    const result = await queueClient.handleJob(() => ({ obladi: 'oblada' }));
 
     assert.equals(result.obladi, 'oblada');
+
+    await driverInstance.closeConnection();
   });
 
   test(`[${driver.name}] failed job is marked as failed and can be handled`, async (assert) => {
-    const driverInstance = driver.resetAndGetInstance();
+    const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
-    await queueClient.createJobsDbStructure();
     await queueClient.pushJob({ name: 'Obladi' });
-    await queueClient.handleJob(() => { throw 'Job failed'; });
+    await queueClient.handleJob(() => { throw new Error('Job failed'); });
     assert.plan(1);
     await queueClient.handleFailedJob((payload) => assert.equal(payload.name, 'Obladi'));
+    await driverInstance.closeConnection();
+  });
+
+  test(`[${driver.name}] failed job is marked as failed if it fails two times and can be handled`, async (assert) => {
+    const driverInstance = await driver.resetAndGetInstance();
+    const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
+    await queueClient.pushJob({ name: 'Obladi' });
+    await queueClient.handleJob(() => { throw new Error('Job failed'); });
+    assert.plan(2);
+    await queueClient.handleFailedJob((payload) => {
+      assert.equal(payload.name, 'Obladi');
+      throw new Error('Another failure');
+    });
+    await queueClient.handleFailedJob((payload) => {
+      assert.equal(payload.name, 'Obladi');
+    });
+    await driverInstance.closeConnection();
   });
 
   test(`[${driver.name}] handle job by uuid`, async (assert) => {
-    const driverInstance = driver.resetAndGetInstance();
+    const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
-    await queueClient.createJobsDbStructure();
     const jobUuid = await queueClient.pushJob({ do: 'something' });
     const result = await queueClient.handleJobByUuid(() => ({ obladi: 'oblada' }), jobUuid);
 
     assert.equals(result.obladi, 'oblada');
+
+    await driverInstance.closeConnection();
+  });
+
+  test(`[${driver.name}] handle job when there aren't any jobs available doesn't fail`, async (assert) => {
+    const driverInstance = await driver.resetAndGetInstance();
+    const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp);
+    const result = await queueClient.handleJob(() => ({ obladi: 'oblada' }));
+
+    assert.equals(result, null);
+
+    await driverInstance.closeConnection();
   });
 });

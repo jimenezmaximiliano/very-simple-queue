@@ -1,0 +1,287 @@
+
+/**
+ * @typedef {import('../types/Job').Job}
+ * @typedef {import('../types/Driver').Driver}
+ * @typedef {import('../helpers/getCurrentTimestamp').getCurrentTimestamp} GetCurrentTimestamp
+ */
+
+/**
+ * @class
+ * @implements Driver
+ */
+class RedisDriver {
+  #parseJobResult
+
+  #connection
+
+  #reserveJob
+
+  #setConnection
+
+  #promisify
+
+  #getJobByKey
+
+  #getJobByPattern
+
+  #getJobKeyByPattern
+
+  #markJob
+
+  #failJob
+
+  /** @type GetCurrentTimestamp */
+  #getCurrentTimestamp
+
+  /**
+   * @param {Function} promisify
+   * @param {GetCurrentTimestamp} getCurrentTimestamp
+   * @param {Object} redis
+   * @param {Object} redisConfig
+   * @param {Function} Redlock
+   */
+  constructor(promisify, getCurrentTimestamp, redis, redisConfig, Redlock) {
+    this.#getCurrentTimestamp = getCurrentTimestamp;
+    this.#promisify = promisify;
+
+    /**
+     * @return {void}
+     */
+    this.#setConnection = () => {
+      if (this.#connection) {
+        return;
+      }
+
+      this.#connection = redis.createClient(redisConfig);
+    };
+
+    /**
+     * @param {Object} result
+     * @returns {Job|null}
+     */
+    this.#parseJobResult = (result) => {
+      if (!result) {
+        return null;
+      }
+
+      const job = result;
+      job.payload = JSON.parse(job.payload);
+
+      return job;
+    };
+
+    /**
+     * @param {Job} job
+     * @param {string} mark
+     * @param {string} currentState
+     * @returns {Promise<void>}
+     */
+    this.#markJob = async (job, mark, currentState) => {
+      const redlock = new Redlock([this.#connection], {
+        retryCount: 1,
+      });
+
+      let resourceLock;
+
+      try {
+        resourceLock = await redlock.lock(`jobs:locks:${job.queue}/${job.uuid}`, 10000000);
+      } catch (lockingError) {
+        throw new Error('Failed to get a lock');
+      }
+
+      try {
+        const set = promisify(this.#connection.set).bind(this.#connection);
+        const del = promisify(this.#connection.del).bind(this.#connection);
+        const keyToDelete = await this.#getJobKeyByPattern(`jobs_${currentState}:*${job.uuid}`);
+        await del(keyToDelete);
+        await set(`jobs_${mark}:${job.queue}/${job.uuid}`, JSON.stringify(job));
+      } catch (error) {
+        await resourceLock.unlock();
+        throw new Error('Failed to reserve job');
+      }
+
+      await resourceLock.unlock();
+    };
+
+    /**
+     * @param {Job} job
+     * @returns {Promise<Job|null>}
+     */
+    this.#reserveJob = async (job) => {
+      const jobCopy = { ...job };
+      const currentState = jobCopy.failed_at ? 'failed' : 'available';
+      jobCopy.reserved_at = this.#getCurrentTimestamp();
+      jobCopy.failed_at = null;
+
+      try {
+        await this.#markJob(jobCopy, 'reserved', currentState);
+      } catch (error) {
+        return null;
+      }
+
+      return jobCopy;
+    };
+
+    /**
+     * @param {Job} job
+     * @returns {Promise<void>}
+     */
+    this.#failJob = async (job) => {
+      const jobCopy = { ...job };
+      jobCopy.failed_at = this.#getCurrentTimestamp();
+      jobCopy.reserved_at = null;
+      await this.#markJob(jobCopy, 'failed', 'reserved');
+    };
+
+    /**
+     * @param {string} key
+     * @returns {Promise<null|any>}
+     */
+    this.#getJobByKey = async (key) => {
+      const get = this.#promisify(this.#connection.get).bind(this.#connection);
+
+      const rawJob = await get(key);
+
+      if (!rawJob) {
+        return null;
+      }
+
+      return JSON.parse(rawJob);
+    };
+
+    /**
+     * @param {string} pattern
+     * @returns {Promise<null|Job>}
+     */
+    this.#getJobByPattern = async (pattern) => {
+      const key = await this.#getJobKeyByPattern(pattern);
+
+      if (!key) {
+        return null;
+      }
+
+      return this.#getJobByKey(key);
+    };
+
+    /**
+     * @param {string} pattern
+     * @returns {Promise<string|null>}
+     */
+    this.#getJobKeyByPattern = async (pattern) => {
+      const keys = this.#promisify(this.#connection.keys).bind(this.#connection);
+      const keysResult = await keys(pattern);
+      return keysResult[0] || null;
+    };
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  // eslint-disable-next-line no-empty-function
+  async createJobsDbStructure() {
+  }
+
+  /**
+   * @param {Job} job
+   * @returns {Promise<void>}
+   */
+  async storeJob(job) {
+    await this.#setConnection();
+    await this.#connection.setnx(`jobs_available:${job.queue}/${job.uuid}`, JSON.stringify(job));
+  }
+
+  /**
+   * @param {string} queue
+   * @returns {Promise<Job|null>}
+   */
+  async getJob(queue) {
+    await this.#setConnection();
+    const job = await this.#getJobByPattern(`jobs_available:${queue}/*`);
+
+    if (!job) {
+      return null;
+    }
+
+    try {
+      return this.#reserveJob(job);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * @param {string} jobUuid
+   * @returns {Promise<Job|null>}
+   */
+  async getJobByUuid(jobUuid) {
+    await this.#setConnection();
+    const job = await this.#getJobByPattern(`jobs_available:*/${jobUuid}`);
+    try {
+      return this.#reserveJob(job);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * @param {string} queue
+   * @returns {Promise<Job|null>}
+   */
+  async getFailedJob(queue) {
+    const job = await this.#getJobByPattern(`jobs_failed:${queue}/*`);
+
+    try {
+      return this.#reserveJob(job);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * @param {string} jobUuid
+   * @returns {Promise<void>}
+   */
+  async deleteJob(jobUuid) {
+    const jobKey = await this.#getJobKeyByPattern(`jobs_*${jobUuid}`);
+    const del = this.#promisify(this.#connection.del).bind(this.#connection);
+
+    await del(jobKey);
+  }
+
+  /**
+   * @param {string} jobUuid
+   * @returns {Promise<void>}
+   */
+  async markJobAsFailed(jobUuid) {
+    const job = await this.#getJobByPattern(`jobs_reserved:*${jobUuid}`);
+    await this.#failJob(job);
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async deleteAllJobs() {
+    await this.#setConnection();
+    const keys = this.#promisify(this.#connection.keys).bind(this.#connection);
+    const allKeys = await keys('*');
+    const del = this.#promisify(this.#connection.del).bind(this.#connection);
+
+    if (!allKeys) {
+      return;
+    }
+
+    const delPromises = allKeys.map((key) => del(key));
+
+    await Promise.all(delPromises);
+  }
+
+  /**
+   * @returns {Promise<void>}
+   */
+  async closeConnection() {
+    const quit = this.#promisify(this.#connection.quit).bind(this.#connection);
+    await quit();
+  }
+}
+
+module.exports = RedisDriver;
