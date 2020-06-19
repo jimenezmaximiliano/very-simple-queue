@@ -1,6 +1,11 @@
 /**
+ * @module types
+ */
+
+/**
  * Driver
- * @typedef {Object} Driver
+ * @typedef module:types.Driver
+ * @type {Object}
  * @property {CreateJobsDbStructure} createJobsDbStructure
  * @property {StoreJob} storeJob
  * @property {GetJob} getJob

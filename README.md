@@ -1,12 +1,22 @@
 # Very Simple Queue
 ![CI](https://github.com/jimenezmaximiliano/very-simple-queue/workflows/CI/badge.svg?branch=master)
 
-Very Simple Queue is a job queue with a simple API and support for sqlite3 (additional drivers on the way)
+Very Simple Queue is a job queue with a simple API and support for:
+
+- sqlite3
+- redis
+- Additional drivers on the way
 
 ## Installation
 
 ```bash
 npm install very-simple-queue
+```
+
+or
+
+```bash
+yarn add very-simple-queue
 ```
 
 ## Usage
@@ -16,7 +26,7 @@ npm install very-simple-queue
 ```javascript
 const VerySimpleQueue = require('very-simple-queue');
 
-const queue = new VerySimpleQueue('sqlite3', {
+const verySimpleQueue = new VerySimpleQueue('sqlite3', {
   filePath: '/tmp/testdb.sqlite3',
 });
 
@@ -25,56 +35,42 @@ const queue = new VerySimpleQueue('sqlite3', {
 ### Usage example
 
 ```javascript
-await queue.createJobsDbStructure(); // Only the first time
-await queue.pushJob({ name: "Maxi" }, 'myQueue');
-await queue.handleJob((payload) => console.log(payload), 'myQueue');
+await verySimpleQueue.createJobsDbStructure(); // Only the first time
+await verySimpleQueue.pushJob({ obladi: "oblada" }, 'myQueue');
+await verySimpleQueue.handleJob((payload) => console.log(payload), 'myQueue');
 ```
 
+### Workers
+
+#### Using the work function
+
+```javascript
+await verySimpleQueue.work((payload) => console.log(payload), { queue: 'myQueue' });
+```
+
+##### Default values for worker settings
+
+```javascript
+{
+  queue: 'default',
+  restTimeInSeconds: 5,
+  logErrors: true,
+  stopOnError: false,
+  logResults: false,
+}
+```
+
+#### Custom workers
+
+You can create custom workers using the provided functions to handle jobs. You only need a loop. Check out
+the API reference for more information.
+
 ## API Reference
-
-### Modules
-
-<dl>
-<dt><a href="#module_JobHandler">JobHandler</a></dt>
-<dd></dd>
-</dl>
-
-### Classes
-
-<dl>
-<dt><a href="#VerySimpleQueue">VerySimpleQueue</a></dt>
-<dd></dd>
-</dl>
-
-### Functions
-
-<dl>
-<dt></dt>
-<dd></dd>
-</dl>
-
-<a name="module_JobHandler"></a>
-
-### JobHandler
-
-* * *
-
-<a name="exp_module_JobHandler--undefined"></a>
-
-#### 
-**Kind**: global method of [<code>JobHandler</code>](#module_JobHandler)  
-
-| Param | Type |
-| --- | --- |
-| payload | <code>Object</code> | 
-
-
-* * *
 
 <a name="VerySimpleQueue"></a>
 
 ### VerySimpleQueue
-**Kind**: global class  
+**Kind**: global class
 
 * [VerySimpleQueue](#VerySimpleQueue)
     * [new VerySimpleQueue(driverName, driverConfig)](#new_VerySimpleQueue_new)
@@ -84,6 +80,7 @@ await queue.handleJob((payload) => console.log(payload), 'myQueue');
     * [.handleJobByUuid(jobHandler, jobUuid)](#VerySimpleQueue+handleJobByUuid) ⇒ <code>Promise.&lt;\*&gt;</code>
     * [.handleFailedJob(jobHandler, [queue])](#VerySimpleQueue+handleFailedJob) ⇒ <code>Promise.&lt;\*&gt;</code>
     * [.closeConnection()](#VerySimpleQueue+closeConnection) ⇒ <code>Promise.&lt;void&gt;</code>
+    * [.work(jobHandler, settings)](#VerySimpleQueue+work) ⇒ <code>Promise.&lt;void&gt;</code>
 
 
 * * *
@@ -97,15 +94,15 @@ VerySimpleQueue client constructor
 | Param | Type | Description |
 | --- | --- | --- |
 | driverName | <code>string</code> | 'sqlite3' or 'redis' |
-| driverConfig | <code>Sqlite3DriverConfig</code> \| <code>Object</code> | Driver specific configuration For redis see https://github.com/NodeRedis/node-redis#options-object-properties |
+| driverConfig | <code>module:types.Sqlite3DriverConfig</code> \| <code>Object</code> | Driver specific configuration For redis see https://github.com/NodeRedis/node-redis#options-object-properties |
 
-**Example** *(Sqlite3 driver)*  
+**Example** *(Sqlite3 driver)*
 ```js
 new VerySimpleQueue('sqlite3', { filePath: '/tmp/db.sqlite3' });
 ```
-**Example** *(Redis driver)*  
+**Example** *(Redis driver)*
 ```js
-new VerySimpleQueue('redis', {});
+new VerySimpleQueue('redis', {}); // Options: https://github.com/NodeRedis/node-redis#options-object-properties
 ```
 
 * * *
@@ -115,7 +112,7 @@ new VerySimpleQueue('redis', {});
 #### verySimpleQueue.createJobsDbStructure() ⇒ <code>Promise.&lt;void&gt;</code>
 Creates the jobs table for SQL drivers and does nothing for redis
 
-**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)  
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
 
 * * *
 
@@ -124,15 +121,15 @@ Creates the jobs table for SQL drivers and does nothing for redis
 #### verySimpleQueue.pushJob(payload, [queue]) ⇒ <code>Promise.&lt;string&gt;</code>
 Push a new job to a queue
 
-**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)  
-**Returns**: <code>Promise.&lt;string&gt;</code> - - A promise of the created job's uuid  
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
+**Returns**: <code>Promise.&lt;string&gt;</code> - - A promise of the created job's uuid
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | payload | <code>Object</code> |  | This the object that the handler is going to get when you try to handle the job |
 | [queue] | <code>string</code> | <code>&quot;default&quot;</code> | Queue name |
 
-**Example**  
+**Example**
 ```js
 const jobUuid = verySimpleQueue.pushJob({ sendEmailTo: 'foo@foo.com' }, 'emails-to-send');
 ```
@@ -145,15 +142,15 @@ const jobUuid = verySimpleQueue.pushJob({ sendEmailTo: 'foo@foo.com' }, 'emails-
 Handle one job on the given queue
 The job get's deleted if it doesn't fail and is marked a failed if it does
 
-**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)  
-**Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns  
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
+**Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| jobHandler | [<code>JobHandler</code>](#module_JobHandler) |  | Function that will receive the payload and handle the job |
+| jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |  | Function that will receive the payload and handle the job |
 | [queue] | <code>string</code> | <code>&quot;default&quot;</code> | The queue from which to take the job |
 
-**Example**  
+**Example**
 ```js
 verySimpleQueue.handleJob((payload) => sendEmail(payload.email), 'emails-to-send');
 ```
@@ -166,15 +163,15 @@ verySimpleQueue.handleJob((payload) => sendEmail(payload.email), 'emails-to-send
 Handle a job by uuid
 Same as handleJob but here you know which job you want to handle
 
-**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)  
-**Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns  
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
+**Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns
 
 | Param | Type | Description |
 | --- | --- | --- |
-| jobHandler | [<code>JobHandler</code>](#module_JobHandler) | Function that will receive the payload and handle the job |
+| jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) | Function that will receive the payload and handle the job |
 | jobUuid | <code>string</code> | The job uuid that you've got when you pushed the job |
 
-**Example**  
+**Example**
 ```js
 verySimpleQueue.handleJobByUuid(
  (payload) => sendEmail(payload.email),
@@ -189,15 +186,15 @@ verySimpleQueue.handleJobByUuid(
 #### verySimpleQueue.handleFailedJob(jobHandler, [queue]) ⇒ <code>Promise.&lt;\*&gt;</code>
 Handle a job that failed on a given queue
 
-**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)  
-**Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns  
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
+**Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| jobHandler | [<code>JobHandler</code>](#module_JobHandler) |  | Function that will receive the payload and handle the job |
+| jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |  | Function that will receive the payload and handle the job |
 | [queue] | <code>string</code> | <code>&quot;default&quot;</code> | The queue from which to take the failed job |
 
-**Example**  
+**Example**
 ```js
 verySimpleQueue.handleFailedJob((payload) => tryAgain(payload.email), 'emails-to-send');
 ```
@@ -209,10 +206,33 @@ verySimpleQueue.handleFailedJob((payload) => tryAgain(payload.email), 'emails-to
 #### verySimpleQueue.closeConnection() ⇒ <code>Promise.&lt;void&gt;</code>
 Closes the connection to the database
 
-**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)  
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
+
+* * *
+
+<a name="VerySimpleQueue+work"></a>
+
+#### verySimpleQueue.work(jobHandler, settings) ⇒ <code>Promise.&lt;void&gt;</code>
+Worker function to continuously handle jobs on a queue
+
+**Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
+
+| Param | Type |
+| --- | --- |
+| jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |
+| settings | <code>module:types.WorkerSettings</code> |
+
+**Example**
+```js
+verySimpleQueue.work(
+ (payload) => sendEmail(payload.email),
+ { queue: 'email-to-send' }
+);
+```
 
 * * *
 
 
 ## License
+
 [ISC](LICENSE.md)

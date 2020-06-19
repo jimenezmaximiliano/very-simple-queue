@@ -8,6 +8,7 @@ const getCurrentTimestamp = require('./helpers/getCurrentTimestamp');
 const QueueClient = require('./QueueClient');
 const Sqlite3Driver = require('./drivers/Sqlite3Driver');
 const RedisDriver = require('./drivers/RedisDriver');
+const Worker = require('./Worker');
 
 /**
  * @class
@@ -22,14 +23,14 @@ class VerySimpleQueue {
   /**
    * VerySimpleQueue client constructor
    * @param {string} driverName - 'sqlite3' or 'redis'
-   * @param {Sqlite3DriverConfig | Object} driverConfig -
+   * @param {module:types.Sqlite3DriverConfig | Object} driverConfig -
    * Driver specific configuration
    * For redis see https://github.com/NodeRedis/node-redis#options-object-properties
    *
    * @example <caption>Sqlite3 driver</caption>
    * new VerySimpleQueue('sqlite3', { filePath: '/tmp/db.sqlite3' });
    * @example <caption>Redis driver</caption>
-   * new VerySimpleQueue('redis', {});
+   * new VerySimpleQueue('redis', {}); // Options: https://github.com/NodeRedis/node-redis#options-object-properties
    */
   constructor(driverName, driverConfig) {
     this.#supportedDrivers = ['sqlite3', 'redis'];
@@ -51,7 +52,7 @@ class VerySimpleQueue {
         sqlite3,
         driverConfig,
       );
-      this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp);
+      this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp, new Worker());
     };
 
     drivers.redis = () => {
@@ -97,7 +98,7 @@ class VerySimpleQueue {
    * Handle one job on the given queue
    * The job get's deleted if it doesn't fail and is marked a failed if it does
    *
-   * @param {module:JobHandler} jobHandler - Function that will receive the payload
+   * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
    * @param {string} [queue=default] - The queue from which to take the job
    * @returns {Promise<*>} - A promise of what the jobHandler returns
@@ -113,7 +114,7 @@ class VerySimpleQueue {
    * Handle a job by uuid
    * Same as handleJob but here you know which job you want to handle
    *
-   * @param {module:JobHandler} jobHandler - Function that will receive the payload
+   * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
    * @param {string} jobUuid - The job uuid that you've got when you pushed the job
    * @returns {Promise<*>} - A promise of what the jobHandler returns
@@ -131,7 +132,7 @@ class VerySimpleQueue {
   /**
    * Handle a job that failed on a given queue
    *
-   * @param {module:JobHandler} jobHandler - Function that will receive the payload
+   * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
    * @param {string} [queue=default] - The queue from which to take the failed job
    * @returns {Promise<*>} - A promise of what the jobHandler returns
@@ -150,6 +151,23 @@ class VerySimpleQueue {
    */
   async closeConnection() {
     await this.#queueClient.closeConnection();
+  }
+
+  /**
+   * Worker function to continuously handle jobs on a queue
+   *
+   * @param {module:types.JobHandler} jobHandler
+   * @param {module:types.WorkerSettings} settings
+   * @returns {Promise<void>}
+   *
+   * @example
+   * verySimpleQueue.work(
+   *  (payload) => sendEmail(payload.email),
+   *  { queue: 'email-to-send' }
+   * );
+   */
+  async work(jobHandler, settings) {
+    await this.#queueClient.work(jobHandler, settings);
   }
 }
 

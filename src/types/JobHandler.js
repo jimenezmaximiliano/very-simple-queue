@@ -1,9 +1,9 @@
 /**
- * @module JobHandler
+ * @module types
  */
 
 /**
- * @typedef module:JobHandler
+ * @typedef module:types.JobHandler
  * @function
  * @param {Object} payload
  */

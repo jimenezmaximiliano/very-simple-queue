@@ -1,40 +1,37 @@
 
 /**
- * @typedef {import('./types/Job').Job}
- * @typedef {import('./types/JobHandler').JobHandler}
- * @typedef {import('./types/Driver').Driver}
- * @typedef {import('./types/UuidGenerator').UuidGenerator}
- * @typedef {import('./helpers/getCurrentTimestamp').getCurrentTimestamp } GetCurrentTimestamp
- */
-
-/**
  * @class
  */
 class QueueClient {
-  /** @type {Driver} */
+  /** @type {module:types.Driver} */
   #dbDriver
 
-  /** @type {UuidGenerator} */
+  /** @type {module:types.UuidGenerator} */
   #uuidGenerator
 
-  /** @type {GetCurrentTimestamp} */
+  /** @type {module:helpers.getCurrentTimestamp} */
   #getCurrentTimestamp
+
+  /** @type {Worker} */
+  #worker
 
   #handleJob
 
   /**
-   * @param {Driver} dbDriver
-   * @param {UuidGenerator} uuidGenerator
-   * @param {GetCurrentTimestamp} getCurrentTimestamp
+   * @param {module:types.Driver} dbDriver
+   * @param {module:types.UuidGenerator} uuidGenerator
+   * @param {module:helpers.getCurrentTimestamp} getCurrentTimestamp
+   * @param {Function} Worker
    */
-  constructor(dbDriver, uuidGenerator, getCurrentTimestamp) {
+  constructor(dbDriver, uuidGenerator, getCurrentTimestamp, worker) {
     this.#dbDriver = dbDriver;
     this.#uuidGenerator = uuidGenerator;
     this.#getCurrentTimestamp = getCurrentTimestamp;
+    this.#worker = worker;
 
     /**
-     * @param {Job} job
-     * @param {JobHandler} jobHandler
+     * @param {module:types.Job} job
+     * @param {module:types.JobHandler} jobHandler
      * @returns {Promise<null|*>}
      */
     this.#handleJob = async (job, jobHandler) => {
@@ -82,7 +79,7 @@ class QueueClient {
   }
 
   /**
-   * @param {JobHandler} jobHandler
+   * @param {module:types.JobHandler} jobHandler
    * @param {string} queue
    * @returns {Promise<*>}
    */
@@ -93,7 +90,7 @@ class QueueClient {
   }
 
   /**
-   * @param {JobHandler} jobHandler
+   * @param {module:types.JobHandler} jobHandler
    * @param {string} jobUuid
    * @returns {Promise<*>}
    */
@@ -104,7 +101,7 @@ class QueueClient {
   }
 
   /**
-   * @param {JobHandler} jobHandler
+   * @param {module:types.JobHandler} jobHandler
    * @param {string} queue
    * @returns {Promise<*>}
    */
@@ -119,6 +116,15 @@ class QueueClient {
    */
   async closeConnection() {
     await this.#dbDriver.closeConnection();
+  }
+
+  /**
+   * @param {module:types.JobHandler} jobHandler
+   * @param {module:types.WorkerSettings} settings
+   * @returns {Promise<void>}
+   */
+  async work(jobHandler, settings) {
+    await this.#worker.work(this, jobHandler, settings);
   }
 }
 

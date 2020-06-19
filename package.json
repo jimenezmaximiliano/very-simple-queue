@@ -1,12 +1,13 @@
 {
   "name": "very-simple-queue",
-  "version": "0.9.3",
+  "version": "1.0.0",
   "author": "Maximiliano Jimenez <jimenez@maximiliano.com.ar>",
-  "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3 (additional drivers on the way)",
+  "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3 and redis (additional drivers on the way)",
   "keywords": [
     "queue",
     "job",
     "sqlite3",
+    "redis",
     "persistent",
     "concurrent",
     "concurrency",
