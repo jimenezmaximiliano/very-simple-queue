@@ -1,5 +1,10 @@
 /**
+ * @module types
+ */
+
+/**
  * UuidGenerator
- * @typedef {Function} UuidGenerator
+ * @typedef module.types.UuidGenerator
+ * @type {Function}
  * @returns {string}
  */

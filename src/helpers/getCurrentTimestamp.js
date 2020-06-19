@@ -1,9 +1,12 @@
 /**
+ * @module helpers
+ */
+
+/**
  * GetCurrentTimestamp
+ * @typedef module:helpers.getCurrentTimestamp
  * @returns {number}
  */
-function getCurrentTimestamp() {
-  return Math.floor(Date.now() / 1000);
-}
+const getCurrentTimestamp = () => Math.floor(Date.now() / 1000);
 
 module.exports = getCurrentTimestamp;

@@ -1,6 +1,11 @@
 /**
+ * @module types
+ */
+
+/**
  * Job
- * @typedef {Object} Job
+ * @typedef module:types.Job
+ * @type {Object}
  * @property {string} uuid
  * @property {string} queue
  * @property {Object} payload
