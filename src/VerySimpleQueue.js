@@ -64,7 +64,7 @@ class VerySimpleQueue {
         RedLock,
       );
 
-      this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp);
+      this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp, new Worker());
     };
 
     drivers[driverName]();
