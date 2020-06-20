@@ -31,23 +31,19 @@ class Worker {
    */
   async work(queueClient, jobHandler, workerSettings) {
     const settings = { ...this.#defaultSettings, ...workerSettings };
-
+    let jobQuantity = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      try {
-        const result = await queueClient.handleJob(jobHandler, settings.queue);
+      jobQuantity += 1;
+      const result = await queueClient.handleJob(jobHandler, settings.queue);
 
-        if (settings.logResults) {
-          console.log(`Result: ${JSON.stringify(result)}`);
-        }
-      } catch (error) {
-        if (settings.logErrors) {
-          console.log(`Error: ${JSON.stringify(error)}`);
-        }
+      if (settings.logResults) {
+        console.log(`Result: ${JSON.stringify(result)}`);
+      }
 
-        if (settings.stopOnError) {
-          throw error;
-        }
+      if (settings.limit && settings.limit >= jobQuantity) {
+        console.log('Job limit reached');
+        return;
       }
 
       await this.#sleep(settings.restTimeInSeconds);

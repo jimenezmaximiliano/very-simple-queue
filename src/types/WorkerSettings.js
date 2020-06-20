@@ -8,7 +8,6 @@
  * @type {Object}
  * @property {string} queue
  * @property {Number} restTimeInSeconds
- * @property {boolean} logErrors
- * @property {boolean} stopOnError
+ * @property {Number|null} limit
  * @property {boolean} logResults
  */
