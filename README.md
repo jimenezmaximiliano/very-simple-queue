@@ -3,8 +3,9 @@
 
 Very Simple Queue is a job queue with a simple API and support for:
 
-- sqlite3
 - redis
+- mysql
+- sqlite3
 - Additional drivers on the way
 
 ## Installation
@@ -93,7 +94,7 @@ VerySimpleQueue client constructor
 | Param | Type | Description |
 | --- | --- | --- |
 | driverName | <code>string</code> | 'sqlite3' or 'redis' |
-| driverConfig | <code>module:types.Sqlite3DriverConfig</code> \| <code>Object</code> | Driver specific configuration For redis see https://github.com/NodeRedis/node-redis#options-object-properties |
+| driverConfig | [<code>Sqlite3DriverConfig</code>](#module_types.Sqlite3DriverConfig) \| <code>Object</code> | Driver specific configuration. For redis see https://github.com/NodeRedis/node-redis#options-object-properties . For mysql see https://github.com/mysqljs/mysql#connection-options . |
 
 **Example** *(Sqlite3 driver)*
 ```js
@@ -102,6 +103,15 @@ new VerySimpleQueue('sqlite3', { filePath: '/tmp/db.sqlite3' });
 **Example** *(Redis driver)*
 ```js
 new VerySimpleQueue('redis', {}); // Options: https://github.com/NodeRedis/node-redis#options-object-properties
+```
+**Example** *(MySQL driver)*
+```js
+new VerySimpleQueue('mysql', {
+     host: 'localhost',
+     user: 'root',
+     password: 'root',
+     database: 'queue',
+   }); // Options: https://github.com/mysqljs/mysql#connection-options
 ```
 
 * * *
@@ -219,7 +229,7 @@ Worker function to continuously handle jobs on a queue
 | Param | Type |
 | --- | --- |
 | jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |
-| settings | <code>module:types.WorkerSettings</code> |
+| settings | [<code>WorkerSettings</code>](#module_types.WorkerSettings) |
 
 **Example**
 ```js
@@ -228,6 +238,63 @@ verySimpleQueue.work(
  { queue: 'email-to-send' }
 );
 ```
+
+* * *
+
+<a name="module_types"></a>
+
+### types
+
+* [types](#module_types)
+    * [.JobHandler(payload)](#module_types.JobHandler)
+    * [.Sqlite3DriverConfig](#module_types.Sqlite3DriverConfig) : <code>Object</code>
+    * [.WorkerSettings](#module_types.WorkerSettings) : <code>Object</code>
+
+
+* * *
+
+<a name="module_types.JobHandler"></a>
+
+#### types.JobHandler(payload)
+**Kind**: static method of [<code>types</code>](#module_types)
+
+| Param | Type |
+| --- | --- |
+| payload | <code>Object</code> |
+
+
+* * *
+
+<a name="module_types.Sqlite3DriverConfig"></a>
+
+#### types.Sqlite3DriverConfig : <code>Object</code>
+Sqlite3DriverConfig
+
+**Kind**: static typedef of [<code>types</code>](#module_types)
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| filePath | <code>string</code> |
+
+
+* * *
+
+<a name="module_types.WorkerSettings"></a>
+
+#### types.WorkerSettings : <code>Object</code>
+WorkerSettings
+
+**Kind**: static typedef of [<code>types</code>](#module_types)
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| queue | <code>string</code> | The queue to work on |
+| restTimeInSeconds | <code>Number</code> | Time to wait after attempting to handle a job whether successful or not |
+| limit | <code>Number</code> \| <code>null</code> | Max number of jobs to be handled |
+| logResults | <code>boolean</code> | console.log the return value of the handler function |
+
 
 * * *
 

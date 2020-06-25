@@ -13,6 +13,15 @@ if (driver === 'sqlite3') {
   settings = { filePath: sqlite3FilePath };
 }
 
+if (driver === 'mysql') {
+  settings = {
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'jobs',
+  };
+}
+
 const queue = new VerySimpleQueue(driver, settings);
 
 const handleJobs = async (worker) => {
