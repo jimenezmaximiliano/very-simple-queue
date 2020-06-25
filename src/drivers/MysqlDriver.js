@@ -12,7 +12,7 @@ class MysqlDriver {
 
   #reserveJob
 
-  /** @type GetCurrentTimestamp */
+  /** @type module:helpers.getCurrentTimestamp */
   #getCurrentTimestamp
 
   /**
@@ -25,7 +25,7 @@ class MysqlDriver {
 
     /**
      * @param {Object} result
-     * @returns {Job|null}
+     * @returns {module:types.Job|null}
      */
     this.#parseJobResult = (result) => {
       if (!result) {
