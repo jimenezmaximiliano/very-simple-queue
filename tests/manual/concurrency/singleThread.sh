@@ -4,6 +4,11 @@ if [[ "$1" == "redis" ]]; then
     docker run -d -p 6379:6379 redis
 fi
 
+if [[ "$1" == "mysql" ]]; then
+    docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql
+    sleep 10
+fi
+
 if [[ "$1" == "sqlite3" ]]; then
   touch ./tests/manual/concurrency/db.sqlite3
 fi

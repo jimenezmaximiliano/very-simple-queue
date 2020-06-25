@@ -84,7 +84,7 @@ class Sqlite3Driver {
      * @param {string} query
      * @param {Object} params
      * @param {Object|null} connection
-     * @returns {Promise<Object>}
+     * @returns {Promise<Object|null>}
      */
     this.#getRow = async (query, params, connection = null) => {
       const connectionToUse = connection || this.#sharedConnection;

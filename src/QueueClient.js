@@ -21,7 +21,7 @@ class QueueClient {
    * @param {module:types.Driver} dbDriver
    * @param {module:types.UuidGenerator} uuidGenerator
    * @param {module:helpers.getCurrentTimestamp} getCurrentTimestamp
-   * @param {Function} Worker
+   * @param {Object} worker
    */
   constructor(dbDriver, uuidGenerator, getCurrentTimestamp, worker) {
     this.#dbDriver = dbDriver;

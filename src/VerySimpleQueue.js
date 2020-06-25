@@ -3,10 +3,12 @@ const sqlite3 = require('sqlite3');
 const uuidGenerator = require('uuid').v4;
 const redis = require('redis');
 const RedLock = require('redlock');
+const mysql = require('mysql2/promise');
 
 const getCurrentTimestamp = require('./helpers/getCurrentTimestamp');
 const QueueClient = require('./QueueClient');
 const Sqlite3Driver = require('./drivers/Sqlite3Driver');
+const MysqlDriver = require('./drivers/MysqlDriver');
 const RedisDriver = require('./drivers/RedisDriver');
 const Worker = require('./Worker');
 
@@ -24,16 +26,22 @@ class VerySimpleQueue {
    * VerySimpleQueue client constructor
    * @param {string} driverName - 'sqlite3' or 'redis'
    * @param {module:types.Sqlite3DriverConfig | Object} driverConfig -
-   * Driver specific configuration
-   * For redis see https://github.com/NodeRedis/node-redis#options-object-properties
+   * Driver specific configuration. For redis see https://github.com/NodeRedis/node-redis#options-object-properties . For mysql see https://github.com/mysqljs/mysql#connection-options .
    *
    * @example <caption>Sqlite3 driver</caption>
    * new VerySimpleQueue('sqlite3', { filePath: '/tmp/db.sqlite3' });
    * @example <caption>Redis driver</caption>
    * new VerySimpleQueue('redis', {}); // Options: https://github.com/NodeRedis/node-redis#options-object-properties
+   * @example <caption>MySQL driver</caption>
+   * new VerySimpleQueue('mysql', {
+   *      host: 'localhost',
+   *      user: 'root',
+   *      password: 'root',
+   *      database: 'queue',
+   *    }); // Options: https://github.com/mysqljs/mysql#connection-options
    */
   constructor(driverName, driverConfig) {
-    this.#supportedDrivers = ['sqlite3', 'redis'];
+    this.#supportedDrivers = ['sqlite3', 'redis', 'mysql'];
 
     if (!this.#supportedDrivers.includes(driverName)) {
       throw new Error('Driver not supported');
@@ -62,6 +70,16 @@ class VerySimpleQueue {
         redis,
         driverConfig,
         RedLock,
+      );
+
+      this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp, new Worker());
+    };
+
+    drivers.mysql = () => {
+      const driver = new MysqlDriver(
+        getCurrentTimestamp,
+        mysql,
+        driverConfig,
       );
 
       this.#queueClient = new QueueClient(driver, uuidGenerator, getCurrentTimestamp, new Worker());

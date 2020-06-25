@@ -5,7 +5,9 @@ const fs = require('fs');
 const uuidGenerator = require('uuid').v4;
 const redis = require('redis');
 const RedLock = require('redlock');
+const mysql = require('mysql2/promise');
 const Sqlite3Driver = require('../../src/drivers/Sqlite3Driver');
+const MysqlDriver = require('../../src/drivers/MysqlDriver');
 const RedisDriver = require('../../src/drivers/RedisDriver');
 const QueueClient = require('../../src/QueueClient');
 const Worker = require('../../src/Worker');
@@ -32,6 +34,26 @@ const drivers = [
     cleanUp: async () => {
       fs.unlinkSync(sqlite3FilePath);
     },
+  },
+  {
+    name: 'Mysql driver',
+    resetAndGetInstance: async () => {
+      const instance = new MysqlDriver(
+        getCurrentTimestamp,
+        mysql,
+        {
+          host: 'localhost',
+          user: 'root',
+          password: 'root',
+          database: 'queue',
+        },
+      );
+
+      await instance.createJobsDbStructure();
+      await instance.deleteAllJobs();
+      return instance;
+    },
+    cleanUp: async () => {},
   },
   {
     name: 'Redis driver',
