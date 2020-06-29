@@ -6,7 +6,7 @@ fi
 
 if [[ "$1" == "mysql" ]]; then
     docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql
-    sleep 10
+    sleep 20
 fi
 
 if [[ "$1" == "sqlite3" ]]; then

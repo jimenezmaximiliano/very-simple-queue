@@ -32,9 +32,12 @@ class QueueClient {
     /**
      * @param {module:types.Job} job
      * @param {module:types.JobHandler} jobHandler
+     * @param {boolean} [throwErrorOnFailure=false] -
+     * If a job fails, mark it failed and then throw an error
      * @returns {Promise<null|*>}
+     * @throws Error
      */
-    this.#handleJob = async (job, jobHandler) => {
+    this.#handleJob = async (job, jobHandler, throwErrorOnFailure = false) => {
       if (!job) {
         return null;
       }
@@ -45,6 +48,10 @@ class QueueClient {
         return result;
       } catch (error) {
         await this.#dbDriver.markJobAsFailed(job.uuid);
+
+        if (throwErrorOnFailure) {
+          throw new Error(`Job with uuid ${job.uuid} failed`);
+        }
       }
 
       return null;
@@ -81,34 +88,40 @@ class QueueClient {
   /**
    * @param {module:types.JobHandler} jobHandler
    * @param {string} queue
+   * @param {boolean} [throwErrorOnFailure=false] -
+   * If a job fails, mark it failed and then throw an error
    * @returns {Promise<*>}
    */
-  async handleJob(jobHandler, queue = 'default') {
+  async handleJob(jobHandler, queue = 'default', throwErrorOnFailure = false) {
     const job = await this.#dbDriver.getJob(queue);
 
-    return this.#handleJob(job, jobHandler);
+    return this.#handleJob(job, jobHandler, throwErrorOnFailure);
   }
 
   /**
    * @param {module:types.JobHandler} jobHandler
    * @param {string} jobUuid
+   * @param {boolean} [throwErrorOnFailure=false] -
+   * If a job fails, mark it failed and then throw an error
    * @returns {Promise<*>}
    */
-  async handleJobByUuid(jobHandler, jobUuid) {
+  async handleJobByUuid(jobHandler, jobUuid, throwErrorOnFailure = false) {
     const job = await this.#dbDriver.getJobByUuid(jobUuid);
 
-    return this.#handleJob(job, jobHandler);
+    return this.#handleJob(job, jobHandler, throwErrorOnFailure);
   }
 
   /**
    * @param {module:types.JobHandler} jobHandler
    * @param {string} queue
+   * @param {boolean} [throwErrorOnFailure=false] -
+   * If a job fails, mark it failed and then throw an error
    * @returns {Promise<*>}
    */
-  async handleFailedJob(jobHandler, queue = 'default') {
+  async handleFailedJob(jobHandler, queue = 'default', throwErrorOnFailure = false) {
     const job = await this.#dbDriver.getFailedJob(queue);
 
-    return this.#handleJob(job, jobHandler);
+    return this.#handleJob(job, jobHandler, throwErrorOnFailure);
   }
 
   /**

@@ -38,15 +38,22 @@ const drivers = [
   {
     name: 'Mysql driver',
     resetAndGetInstance: async () => {
+      const config = {
+        host: 'localhost',
+        user: 'root',
+        password: 'root',
+      };
+
+      const connection = await mysql.createConnection(config);
+      await connection.query('CREATE DATABASE IF NOT EXISTS queue');
+      await connection.end();
+
+      config.database = 'queue';
+
       const instance = new MysqlDriver(
         getCurrentTimestamp,
         mysql,
-        {
-          host: 'localhost',
-          user: 'root',
-          password: 'root',
-          database: 'queue',
-        },
+        config,
       );
 
       await instance.createJobsDbStructure();

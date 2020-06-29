@@ -119,13 +119,15 @@ class VerySimpleQueue {
    * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
    * @param {string} [queue=default] - The queue from which to take the job
+   * @param {boolean} [throwErrorOnFailure=false] -
+   * If a job fails, mark it failed and then throw an error
    * @returns {Promise<*>} - A promise of what the jobHandler returns
    *
    * @example
    * verySimpleQueue.handleJob((payload) => sendEmail(payload.email), 'emails-to-send');
    */
-  async handleJob(jobHandler, queue = 'default') {
-    return this.#queueClient.handleJob(jobHandler, queue);
+  async handleJob(jobHandler, queue = 'default', throwErrorOnFailure = false) {
+    return this.#queueClient.handleJob(jobHandler, queue, throwErrorOnFailure);
   }
 
   /**
@@ -135,6 +137,8 @@ class VerySimpleQueue {
    * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
    * @param {string} jobUuid - The job uuid that you've got when you pushed the job
+   * @param {boolean} [throwErrorOnFailure=false] -
+   * If a job fails, mark it failed and then throw an error
    * @returns {Promise<*>} - A promise of what the jobHandler returns
    *
    * @example
@@ -143,8 +147,8 @@ class VerySimpleQueue {
    *  'd5dfb2d6-b845-4e04-b669-7913bfcb2600'
    * );
    */
-  async handleJobByUuid(jobHandler, jobUuid) {
-    return this.#queueClient.handleJobByUuid(jobHandler, jobUuid);
+  async handleJobByUuid(jobHandler, jobUuid, throwErrorOnFailure = false) {
+    return this.#queueClient.handleJobByUuid(jobHandler, jobUuid, throwErrorOnFailure);
   }
 
   /**
@@ -153,13 +157,15 @@ class VerySimpleQueue {
    * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
    * @param {string} [queue=default] - The queue from which to take the failed job
+   * @param {boolean} [throwErrorOnFailure=false] -
+   * If a job fails, mark it failed and then throw an error
    * @returns {Promise<*>} - A promise of what the jobHandler returns
    *
    * @example
    * verySimpleQueue.handleFailedJob((payload) => tryAgain(payload.email), 'emails-to-send');
    */
-  async handleFailedJob(jobHandler, queue = 'default') {
-    return this.#queueClient.handleFailedJob(jobHandler, queue);
+  async handleFailedJob(jobHandler, queue = 'default', throwErrorOnFailure = false) {
+    return this.#queueClient.handleFailedJob(jobHandler, queue, throwErrorOnFailure);
   }
 
   /**

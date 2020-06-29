@@ -19,7 +19,7 @@ const driver = process.argv[2];
     };
 
     const connection = await mysql.createConnection(settings);
-    await connection.query('CREATE DATABASE jobs');
+    await connection.query('CREATE DATABASE IF NOT EXISTS jobs');
     settings.database = 'jobs';
     await connection.end();
   }

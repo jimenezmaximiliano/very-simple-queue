@@ -20,6 +20,8 @@ class Worker {
       logErrors: true,
       stopOnError: false,
       logResults: false,
+      stopOnFailure: false,
+      loggerFunction: console.log,
     };
   }
 
@@ -31,18 +33,29 @@ class Worker {
    */
   async work(queueClient, jobHandler, workerSettings) {
     const settings = { ...this.#defaultSettings, ...workerSettings };
+    const log = settings.loggerFunction;
     let jobQuantity = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
       jobQuantity += 1;
-      const result = await queueClient.handleJob(jobHandler, settings.queue);
+      try {
+        const result = await queueClient.handleJob(jobHandler, settings.queue, true);
 
-      if (settings.logResults) {
-        console.log(`Result: ${JSON.stringify(result)}`);
+        if (settings.logResults) {
+          log(`Result: ${JSON.stringify(result)}`);
+        }
+      } catch (error) {
+        if (settings.logErrors) {
+          log(JSON.stringify(error.message));
+        }
+
+        if (settings.stopOnFailure) {
+          return;
+        }
       }
 
       if (settings.limit && settings.limit >= jobQuantity) {
-        console.log('Job limit reached');
+        log('Job limit reached');
         return;
       }
 
