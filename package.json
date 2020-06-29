@@ -1,6 +1,6 @@
 {
   "name": "very-simple-queue",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Maximiliano Jimenez <jimenez@maximiliano.com.ar>",
   "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3, redis and mysql (additional drivers on the way)",
   "keywords": [
@@ -25,16 +25,22 @@
   },
   "homepage": "https://github.com/jimenezmaximiliano/very-simple-queue",
   "scripts": {
-    "test": "node ./tests/integration/testQueueClient.js",
+    "test": "node ./tests/integration/testQueueClient.js ./tests/unit/testWorker.js",
+    "unit": "node ./tests/unit/testWorker.js",
+    "docs": "./node_modules/jsdoc-to-markdown/bin/cli.js --heading-depth 3 --template README.hbs  --separators --example-lang js src/VerySimpleQueue.js src/types/Sqlite3DriverConfig.js src/types/JobHandler.js src/types/WorkerSettings.js > README.md",
+    "start-mysql": "docker run --name vsq-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql",
+    "stop-mysql": "docker kill vsq-mysql && docker rm vsq-mysql",
+    "start-redis": "docker run --name vsq-redis -d -p 6379:6379 redis",
+    "stop-redis": "docker kill vsq-redis && docker rm vsq-redis",
     "test-manual-concurrency-single-thread": "./tests/manual/concurrency/singleThread.sh",
-    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh",
-    "docs": "./node_modules/jsdoc-to-markdown/bin/cli.js --heading-depth 3 --template README.hbs  --separators --example-lang js src/VerySimpleQueue.js src/types/Sqlite3DriverConfig.js src/types/JobHandler.js src/types/WorkerSettings.js > README.md"
+    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh"
   },
   "dependencies": {
     "mysql2": "^2.1.0",
     "redis": "^3.0.2",
     "redlock": "^4.1.0",
     "sqlite3": "^4.2.0",
+    "testdouble": "^3.16.0",
     "uuid": "^8.0.0"
   },
   "engines": {

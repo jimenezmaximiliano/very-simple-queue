@@ -1,11 +1,5 @@
 
 /**
- * @typedef {import('../types/Job').Job}
- * @typedef {import('../types/Driver').Driver}
- * @typedef {import('../helpers/getCurrentTimestamp').getCurrentTimestamp} GetCurrentTimestamp
- */
-
-/**
  * @class
  * @implements Driver
  */
@@ -35,7 +29,7 @@ class RedisDriver {
 
   /**
    * @param {Function} promisify
-   * @param {GetCurrentTimestamp} getCurrentTimestamp
+   * @param {module:helpers.getCurrentTimestamp} getCurrentTimestamp
    * @param {Object} redis
    * @param {Object} redisConfig
    * @param {Function} Redlock
@@ -57,7 +51,7 @@ class RedisDriver {
 
     /**
      * @param {Object} result
-     * @returns {Job|null}
+     * @returns {module:types.Job|null}
      */
     this.#parseJobResult = (result) => {
       if (!result) {
@@ -71,7 +65,7 @@ class RedisDriver {
     };
 
     /**
-     * @param {Job} job
+     * @param {module:types.Job} job
      * @param {string} mark
      * @param {string} currentState
      * @returns {Promise<void>}
@@ -104,8 +98,8 @@ class RedisDriver {
     };
 
     /**
-     * @param {Job} job
-     * @returns {Promise<Job|null>}
+     * @param {module:types.Job} job
+     * @returns {Promise<module:types.Job|null>}
      */
     this.#reserveJob = async (job) => {
       const jobCopy = { ...job };
@@ -123,7 +117,7 @@ class RedisDriver {
     };
 
     /**
-     * @param {Job} job
+     * @param {module:types.Job} job
      * @returns {Promise<void>}
      */
     this.#failJob = async (job) => {
@@ -151,7 +145,7 @@ class RedisDriver {
 
     /**
      * @param {string} pattern
-     * @returns {Promise<null|Job>}
+     * @returns {Promise<null|module:types.Job>}
      */
     this.#getJobByPattern = async (pattern) => {
       const key = await this.#getJobKeyByPattern(pattern);
@@ -182,7 +176,7 @@ class RedisDriver {
   }
 
   /**
-   * @param {Job} job
+   * @param {module:types.Job} job
    * @returns {Promise<void>}
    */
   async storeJob(job) {
@@ -192,7 +186,7 @@ class RedisDriver {
 
   /**
    * @param {string} queue
-   * @returns {Promise<Job|null>}
+   * @returns {Promise<module:types.Job|null>}
    */
   async getJob(queue) {
     await this.#setConnection();
@@ -211,7 +205,7 @@ class RedisDriver {
 
   /**
    * @param {string} jobUuid
-   * @returns {Promise<Job|null>}
+   * @returns {Promise<module:types.Job|null>}
    */
   async getJobByUuid(jobUuid) {
     await this.#setConnection();
@@ -225,7 +219,7 @@ class RedisDriver {
 
   /**
    * @param {string} queue
-   * @returns {Promise<Job|null>}
+   * @returns {Promise<module:types.Job|null>}
    */
   async getFailedJob(queue) {
     const job = await this.#getJobByPattern(`jobs_failed:${queue}/*`);

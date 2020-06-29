@@ -1,9 +1,3 @@
-/**
- * @typedef {import('../types/Job').Job}
- * @typedef {import('../types/Driver').Driver}
- * @typedef {import('../types/Sqlite3DriverConfig').Sqlite3DriverConfig}
- * @typedef {import('../helpers/getCurrentTimestamp').getCurrentTimestamp} GetCurrentTimestamp
- */
 
 /**
  * @class
@@ -24,21 +18,21 @@ class Sqlite3Driver {
 
   #reserveJob
 
-  /** @type GetCurrentTimestamp */
+  /** @type module:helpers.getCurrentTimestamp */
   #getCurrentTimestamp
 
   /**
    * @param {Function} promisify
-   * @param {GetCurrentTimestamp} getCurrentTimestamp
+   * @param {module:helpers.getCurrentTimestamp} getCurrentTimestamp
    * @param {Object} sqlite3
-   * @param {Sqlite3DriverConfig} driverConfig
+   * @param {module:types.Sqlite3DriverConfig} driverConfig
    */
   constructor(promisify, getCurrentTimestamp, sqlite3, driverConfig) {
     this.#getCurrentTimestamp = getCurrentTimestamp;
 
     /**
      * @param {Object} result
-     * @returns {Job|null}
+     * @returns {module:types.Job|null}
      */
     this.#parseJobResult = (result) => {
       if (!result) {
@@ -96,7 +90,7 @@ class Sqlite3Driver {
      * @param {Object} connection
      * @param {string} selectQuery
      * @param {Object} params
-     * @returns {Promise<Job|null>}
+     * @returns {Promise<module:types.Job|null>}
      */
     this.#reserveJob = async (connection, selectQuery, params) => {
       try {
@@ -146,7 +140,7 @@ class Sqlite3Driver {
   }
 
   /**
-   * @param {Job} job
+   * @param {module:types.Job} job
    * @returns {Promise<void>}
    */
   async storeJob(job) {
@@ -163,7 +157,7 @@ class Sqlite3Driver {
 
   /**
    * @param {string} queue
-   * @returns {Promise<Job|null>}
+   * @returns {Promise<module:types.Job|null>}
    */
   async getJob(queue) {
     const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL LIMIT 1';
@@ -177,7 +171,7 @@ class Sqlite3Driver {
 
   /**
    * @param {string} jobUuid
-   * @returns {Promise<Job|null>}
+   * @returns {Promise<module:types.Job|null>}
    */
   async getJobByUuid(jobUuid) {
     const query = 'SELECT * FROM jobs WHERE uuid = ? AND reserved_at IS NULL LIMIT 1';
@@ -192,7 +186,7 @@ class Sqlite3Driver {
 
   /**
    * @param {string} queue
-   * @returns {Promise<Job|null>}
+   * @returns {Promise<module:types.Job|null>}
    */
   async getFailedJob(queue) {
     const connection = await this.#getNewConnection();

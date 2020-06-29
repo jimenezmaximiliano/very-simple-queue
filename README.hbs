@@ -57,6 +57,9 @@ await verySimpleQueue.work((payload) => console.log(payload), { queue: 'myQueue'
   restTimeInSeconds: 5,
   logResults: false,
   limit: null, // Number of jobs to handle before stopping
+  logErrors: false,
+  stopOnFailure: false,
+  loggerFunction: console.log,
 }
 ```
 

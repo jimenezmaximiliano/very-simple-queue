@@ -10,5 +10,4 @@
 !package.json
 !.github
 !.gitignore
-!queue.sh
 !README.hbs

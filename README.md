@@ -57,6 +57,9 @@ await verySimpleQueue.work((payload) => console.log(payload), { queue: 'myQueue'
   restTimeInSeconds: 5,
   logResults: false,
   limit: null, // Number of jobs to handle before stopping
+  logErrors: false,
+  stopOnFailure: false,
+  loggerFunction: console.log,
 }
 ```
 
@@ -76,9 +79,9 @@ the API reference for more information.
     * [new VerySimpleQueue(driverName, driverConfig)](#new_VerySimpleQueue_new)
     * [.createJobsDbStructure()](#VerySimpleQueue+createJobsDbStructure) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.pushJob(payload, [queue])](#VerySimpleQueue+pushJob) ⇒ <code>Promise.&lt;string&gt;</code>
-    * [.handleJob(jobHandler, [queue])](#VerySimpleQueue+handleJob) ⇒ <code>Promise.&lt;\*&gt;</code>
-    * [.handleJobByUuid(jobHandler, jobUuid)](#VerySimpleQueue+handleJobByUuid) ⇒ <code>Promise.&lt;\*&gt;</code>
-    * [.handleFailedJob(jobHandler, [queue])](#VerySimpleQueue+handleFailedJob) ⇒ <code>Promise.&lt;\*&gt;</code>
+    * [.handleJob(jobHandler, [queue], [throwErrorOnFailure])](#VerySimpleQueue+handleJob) ⇒ <code>Promise.&lt;\*&gt;</code>
+    * [.handleJobByUuid(jobHandler, jobUuid, [throwErrorOnFailure])](#VerySimpleQueue+handleJobByUuid) ⇒ <code>Promise.&lt;\*&gt;</code>
+    * [.handleFailedJob(jobHandler, [queue], [throwErrorOnFailure])](#VerySimpleQueue+handleFailedJob) ⇒ <code>Promise.&lt;\*&gt;</code>
     * [.closeConnection()](#VerySimpleQueue+closeConnection) ⇒ <code>Promise.&lt;void&gt;</code>
     * [.work(jobHandler, settings)](#VerySimpleQueue+work) ⇒ <code>Promise.&lt;void&gt;</code>
 
@@ -147,7 +150,7 @@ const jobUuid = verySimpleQueue.pushJob({ sendEmailTo: 'foo@foo.com' }, 'emails-
 
 <a name="VerySimpleQueue+handleJob"></a>
 
-#### verySimpleQueue.handleJob(jobHandler, [queue]) ⇒ <code>Promise.&lt;\*&gt;</code>
+#### verySimpleQueue.handleJob(jobHandler, [queue], [throwErrorOnFailure]) ⇒ <code>Promise.&lt;\*&gt;</code>
 Handle one job on the given queue
 The job get's deleted if it doesn't fail and is marked a failed if it does
 
@@ -158,6 +161,7 @@ The job get's deleted if it doesn't fail and is marked a failed if it does
 | --- | --- | --- | --- |
 | jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |  | Function that will receive the payload and handle the job |
 | [queue] | <code>string</code> | <code>&quot;default&quot;</code> | The queue from which to take the job |
+| [throwErrorOnFailure] | <code>boolean</code> | <code>false</code> | If a job fails, mark it failed and then throw an error |
 
 **Example**
 ```js
@@ -168,17 +172,18 @@ verySimpleQueue.handleJob((payload) => sendEmail(payload.email), 'emails-to-send
 
 <a name="VerySimpleQueue+handleJobByUuid"></a>
 
-#### verySimpleQueue.handleJobByUuid(jobHandler, jobUuid) ⇒ <code>Promise.&lt;\*&gt;</code>
+#### verySimpleQueue.handleJobByUuid(jobHandler, jobUuid, [throwErrorOnFailure]) ⇒ <code>Promise.&lt;\*&gt;</code>
 Handle a job by uuid
 Same as handleJob but here you know which job you want to handle
 
 **Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
 **Returns**: <code>Promise.&lt;\*&gt;</code> - - A promise of what the jobHandler returns
 
-| Param | Type | Description |
-| --- | --- | --- |
-| jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) | Function that will receive the payload and handle the job |
-| jobUuid | <code>string</code> | The job uuid that you've got when you pushed the job |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |  | Function that will receive the payload and handle the job |
+| jobUuid | <code>string</code> |  | The job uuid that you've got when you pushed the job |
+| [throwErrorOnFailure] | <code>boolean</code> | <code>false</code> | If a job fails, mark it failed and then throw an error |
 
 **Example**
 ```js
@@ -192,7 +197,7 @@ verySimpleQueue.handleJobByUuid(
 
 <a name="VerySimpleQueue+handleFailedJob"></a>
 
-#### verySimpleQueue.handleFailedJob(jobHandler, [queue]) ⇒ <code>Promise.&lt;\*&gt;</code>
+#### verySimpleQueue.handleFailedJob(jobHandler, [queue], [throwErrorOnFailure]) ⇒ <code>Promise.&lt;\*&gt;</code>
 Handle a job that failed on a given queue
 
 **Kind**: instance method of [<code>VerySimpleQueue</code>](#VerySimpleQueue)
@@ -202,6 +207,7 @@ Handle a job that failed on a given queue
 | --- | --- | --- | --- |
 | jobHandler | [<code>JobHandler</code>](#module_types.JobHandler) |  | Function that will receive the payload and handle the job |
 | [queue] | <code>string</code> | <code>&quot;default&quot;</code> | The queue from which to take the failed job |
+| [throwErrorOnFailure] | <code>boolean</code> | <code>false</code> | If a job fails, mark it failed and then throw an error |
 
 **Example**
 ```js
@@ -288,12 +294,15 @@ WorkerSettings
 **Kind**: static typedef of [<code>types</code>](#module_types)
 **Properties**
 
-| Name | Type | Description |
-| --- | --- | --- |
-| queue | <code>string</code> | The queue to work on |
-| restTimeInSeconds | <code>Number</code> | Time to wait after attempting to handle a job whether successful or not |
-| limit | <code>Number</code> \| <code>null</code> | Max number of jobs to be handled |
-| logResults | <code>boolean</code> | console.log the return value of the handler function |
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| [queue] | <code>string</code> | <code>&quot;default&quot;</code> | The queue to work on |
+| [restTimeInSeconds] | <code>Number</code> | <code>5</code> | Time to wait after attempting to handle a job whether successful or not |
+| [limit] | <code>Number</code> \| <code>null</code> | <code></code> | Max number of jobs to be handled |
+| [logResults] | <code>boolean</code> | <code>false</code> | console.log the return value of the handler function |
+| [logErrors] | <code>boolean</code> | <code>false</code> | console.log errors for failed jobs |
+| [stopOnFailure] | <code>boolean</code> | <code>false</code> | Stop the worker if a job fails |
+| [logger] | <code>function</code> | <code>console.log</code> | Function used to log. Defaults to console.log |
 
 
 * * *
