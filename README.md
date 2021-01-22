@@ -6,7 +6,6 @@ Very Simple Queue is a job queue with a simple API and support for:
 - redis
 - mysql
 - sqlite3
-- Additional drivers on the way
 
 ## Installation
 
@@ -75,15 +74,30 @@ the API reference for more information.
 ### VerySimpleQueue
 **Kind**: global class
 
-* [VerySimpleQueue](#VerySimpleQueue)
-    * [new VerySimpleQueue(driverName, driverConfig)](#new_VerySimpleQueue_new)
-    * [.createJobsDbStructure()](#VerySimpleQueue+createJobsDbStructure) ⇒ <code>Promise.&lt;void&gt;</code>
-    * [.pushJob(payload, [queue])](#VerySimpleQueue+pushJob) ⇒ <code>Promise.&lt;string&gt;</code>
-    * [.handleJob(jobHandler, [queue], [throwErrorOnFailure])](#VerySimpleQueue+handleJob) ⇒ <code>Promise.&lt;\*&gt;</code>
-    * [.handleJobByUuid(jobHandler, jobUuid, [throwErrorOnFailure])](#VerySimpleQueue+handleJobByUuid) ⇒ <code>Promise.&lt;\*&gt;</code>
-    * [.handleFailedJob(jobHandler, [queue], [throwErrorOnFailure])](#VerySimpleQueue+handleFailedJob) ⇒ <code>Promise.&lt;\*&gt;</code>
-    * [.closeConnection()](#VerySimpleQueue+closeConnection) ⇒ <code>Promise.&lt;void&gt;</code>
-    * [.work(jobHandler, settings)](#VerySimpleQueue+work) ⇒ <code>Promise.&lt;void&gt;</code>
+- [Very Simple Queue](#very-simple-queue)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Instantiating the VerySimpleQueue facade](#instantiating-the-verysimplequeue-facade)
+    - [Usage example](#usage-example)
+    - [Workers](#workers)
+      - [Using the work function](#using-the-work-function)
+        - [Default values for worker settings](#default-values-for-worker-settings)
+      - [Custom workers](#custom-workers)
+  - [API Reference](#api-reference)
+    - [VerySimpleQueue](#verysimplequeue)
+      - [new VerySimpleQueue(driverName, driverConfig)](#new-verysimplequeuedrivername-driverconfig)
+      - [verySimpleQueue.createJobsDbStructure() ⇒ <code>Promise.&lt;void&gt;</code>](#verysimplequeuecreatejobsdbstructure--promisevoid)
+      - [verySimpleQueue.pushJob(payload, [queue]) ⇒ <code>Promise.&lt;string&gt;</code>](#verysimplequeuepushjobpayload-queue--promisestring)
+      - [verySimpleQueue.handleJob(jobHandler, [queue], [throwErrorOnFailure]) ⇒ <code>Promise.&lt;\*&gt;</code>](#verysimplequeuehandlejobjobhandler-queue-throwerroronfailure--promise)
+      - [verySimpleQueue.handleJobByUuid(jobHandler, jobUuid, [throwErrorOnFailure]) ⇒ <code>Promise.&lt;\*&gt;</code>](#verysimplequeuehandlejobbyuuidjobhandler-jobuuid-throwerroronfailure--promise)
+      - [verySimpleQueue.handleFailedJob(jobHandler, [queue], [throwErrorOnFailure]) ⇒ <code>Promise.&lt;\*&gt;</code>](#verysimplequeuehandlefailedjobjobhandler-queue-throwerroronfailure--promise)
+      - [verySimpleQueue.closeConnection() ⇒ <code>Promise.&lt;void&gt;</code>](#verysimplequeuecloseconnection--promisevoid)
+      - [verySimpleQueue.work(jobHandler, settings) ⇒ <code>Promise.&lt;void&gt;</code>](#verysimplequeueworkjobhandler-settings--promisevoid)
+    - [types](#types)
+      - [types.JobHandler(payload)](#typesjobhandlerpayload)
+      - [types.Sqlite3DriverConfig : <code>Object</code>](#typessqlite3driverconfig--object)
+      - [types.WorkerSettings : <code>Object</code>](#typesworkersettings--object)
+  - [License](#license)
 
 
 * * *
