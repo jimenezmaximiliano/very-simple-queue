@@ -162,7 +162,7 @@ class Sqlite3Driver {
   async getJob(queue) {
     const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL LIMIT 1';
     const connection = await this.#getNewConnection();
-    const result = this.#reserveJob(connection, query, [queue]);
+    const result = await this.#reserveJob(connection, query, [queue]);
 
     await connection.close();
 
@@ -177,7 +177,7 @@ class Sqlite3Driver {
     const query = 'SELECT * FROM jobs WHERE uuid = ? AND reserved_at IS NULL LIMIT 1';
     const connection = await this.#getNewConnection();
 
-    const result = this.#reserveJob(connection, query, [jobUuid]);
+    const result = await this.#reserveJob(connection, query, [jobUuid]);
 
     await connection.close();
 
@@ -192,7 +192,7 @@ class Sqlite3Driver {
     const connection = await this.#getNewConnection();
     const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NOT NULL AND reserved_at IS NULL LIMIT 1';
 
-    const result = this.#reserveJob(connection, query, [queue]);
+    const result = await this.#reserveJob(connection, query, [queue]);
 
     await connection.close();
 
