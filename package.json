@@ -27,7 +27,7 @@
   "scripts": {
     "test": "node ./tests/integration/testQueueClient.js ./tests/unit/testWorker.js",
     "unit": "node ./tests/unit/testWorker.js",
-    "docs": "./node_modules/jsdoc-to-markdown/bin/cli.js --heading-depth 3 --template README.hbs  --separators --example-lang js src/VerySimpleQueue.js src/types/Sqlite3DriverConfig.js src/types/JobHandler.js src/types/WorkerSettings.js > README.md",
+    "docs": "jsdoc-to-markdown --heading-depth 3 --template README.hbs  --separators --example-lang js src/VerySimpleQueue.js src/types/Sqlite3DriverConfig.js src/types/JobHandler.js src/types/WorkerSettings.js > README.md",
     "start-mysql": "docker run --name vsq-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql",
     "stop-mysql": "docker kill vsq-mysql && docker rm vsq-mysql",
     "start-redis": "docker run --name vsq-redis -d -p 6379:6379 redis",
@@ -52,7 +52,6 @@
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.19.0",
-    "jsdoc-to-markdown": "^6",
     "tape": "^5.0.0",
     "testdouble": "^3.16.0"
   },
