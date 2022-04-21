@@ -65,7 +65,6 @@ class VerySimpleQueue {
 
     drivers.redis = () => {
       const driver = new RedisDriver(
-        util.promisify,
         getCurrentTimestamp,
         redis,
         driverConfig,
