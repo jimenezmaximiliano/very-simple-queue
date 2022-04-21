@@ -41,12 +41,13 @@ class RedisDriver {
     /**
      * @return {void}
      */
-    this.#setConnection = () => {
+    this.#setConnection = async () => {
       if (this.#connection) {
         return;
       }
 
       this.#connection = redis.createClient(redisConfig);
+      await this.#connection.connect();
     };
 
     /**
