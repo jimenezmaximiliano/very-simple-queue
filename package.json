@@ -1,7 +1,7 @@
 {
   "name": "very-simple-queue",
   "version": "1.3.2",
-  "author": "Maximiliano Jimenez <jimenez@maximiliano.com.ar>",
+  "author": "Max J <three141592@protonmail.com>",
   "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3, redis and mysql",
   "keywords": [
     "queue",
