@@ -51,7 +51,6 @@ class Sqlite3Driver {
     this.#getNewConnection = () => new Promise((resolve, reject) => {
       const newConnection = new sqlite3.Database(
         driverConfig.filePath,
-        sqlite3.OPEN_READWRITE,
         (error) => {
           if (!error) {
             resolve(newConnection);
