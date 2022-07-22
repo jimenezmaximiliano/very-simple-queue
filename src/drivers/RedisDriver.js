@@ -1,52 +1,50 @@
-
 /**
  * @class
  * @implements Driver
  */
 class RedisDriver {
-  #parseJobResult
+  #parseJobResult;
 
-  #connection
+  #connection;
 
-  #reserveJob
+  #reserveJob;
 
-  #setConnection
+  #setConnection;
 
-  #promisify
+  #getJobByKey;
 
-  #getJobByKey
+  #getJobByPattern;
 
-  #getJobByPattern
+  #getJobKeyByPattern;
 
-  #getJobKeyByPattern
+  #markJob;
 
-  #markJob
+  #failJob;
 
-  #failJob
-
-  /** @type GetCurrentTimestamp */
-  #getCurrentTimestamp
+  /** @type getCurrentTimestamp */
+  #getCurrentTimestamp;
 
   /**
-   * @param {Function} promisify
    * @param {module:helpers.getCurrentTimestamp} getCurrentTimestamp
    * @param {Object} redis
    * @param {Object} redisConfig
    * @param {Function} Redlock
    */
-  constructor(promisify, getCurrentTimestamp, redis, redisConfig, Redlock) {
+  constructor(getCurrentTimestamp, redis, redisConfig, Redlock) {
     this.#getCurrentTimestamp = getCurrentTimestamp;
-    this.#promisify = promisify;
 
     /**
      * @return {void}
      */
-    this.#setConnection = () => {
+    this.#setConnection = async () => {
       if (this.#connection) {
         return;
       }
 
-      this.#connection = redis.createClient(redisConfig);
+      const config = { legacyMode: true, ...redisConfig };
+
+      this.#connection = redis.createClient(config);
+      await this.#connection.connect();
     };
 
     /**
@@ -84,8 +82,8 @@ class RedisDriver {
       }
 
       try {
-        const set = promisify(this.#connection.set).bind(this.#connection);
-        const del = promisify(this.#connection.del).bind(this.#connection);
+        const set = this.#connection.set.bind(this.#connection);
+        const del = this.#connection.del.bind(this.#connection);
         const keyToDelete = await this.#getJobKeyByPattern(`jobs_${currentState}:*${job.uuid}`);
         await del(keyToDelete);
         await set(`jobs_${mark}:${job.queue}/${job.uuid}`, JSON.stringify(job));
@@ -132,7 +130,7 @@ class RedisDriver {
      * @returns {Promise<null|any>}
      */
     this.#getJobByKey = async (key) => {
-      const get = this.#promisify(this.#connection.get).bind(this.#connection);
+      const get = this.#connection.get.bind(this.#connection);
 
       const rawJob = await get(key);
 
@@ -162,7 +160,7 @@ class RedisDriver {
      * @returns {Promise<string|null>}
      */
     this.#getJobKeyByPattern = async (pattern) => {
-      const keys = this.#promisify(this.#connection.keys).bind(this.#connection);
+      const keys = this.#connection.keys.bind(this.#connection);
       const keysResult = await keys(pattern);
       return keysResult[0] || null;
     };
@@ -237,7 +235,7 @@ class RedisDriver {
    */
   async deleteJob(jobUuid) {
     const jobKey = await this.#getJobKeyByPattern(`jobs_*${jobUuid}`);
-    const del = this.#promisify(this.#connection.del).bind(this.#connection);
+    const del = this.#connection.del.bind(this.#connection);
 
     await del(jobKey);
   }
@@ -256,9 +254,9 @@ class RedisDriver {
    */
   async deleteAllJobs() {
     await this.#setConnection();
-    const keys = this.#promisify(this.#connection.keys).bind(this.#connection);
+    const keys = this.#connection.keys.bind(this.#connection);
     const allKeys = await keys('*');
-    const del = this.#promisify(this.#connection.del).bind(this.#connection);
+    const del = this.#connection.del.bind(this.#connection);
 
     if (!allKeys) {
       return;
@@ -273,7 +271,7 @@ class RedisDriver {
    * @returns {Promise<void>}
    */
   async closeConnection() {
-    const quit = this.#promisify(this.#connection.quit).bind(this.#connection);
+    const quit = this.#connection.quit.bind(this.#connection);
     await quit();
   }
 }
