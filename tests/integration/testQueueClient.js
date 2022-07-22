@@ -66,7 +66,6 @@ const drivers = [
     name: 'Redis driver',
     resetAndGetInstance: async () => {
       const instance = new RedisDriver(
-        util.promisify,
         getCurrentTimestamp,
         redis,
         {},
