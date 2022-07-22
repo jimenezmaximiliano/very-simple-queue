@@ -1,6 +1,6 @@
 {
   "name": "very-simple-queue",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "author": "Max <20307236+jimenezmaximiliano@users.noreply.github.com>",
   "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3, redis and mysql",
   "keywords": [
