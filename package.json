@@ -46,12 +46,14 @@
     "node": ">=12"
   },
   "devDependencies": {
-    "babel-eslint": "^10.1.0",
+    "@babel/core": "^7.11.0",
+    "@babel/eslint-parser": "^7.18.9",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.1.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^4",
     "tape": "^5.0.0",
     "testdouble": "^3.16.0"
   },
