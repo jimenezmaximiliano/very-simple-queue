@@ -44,7 +44,7 @@ class VerySimpleQueue {
     this.#supportedDrivers = ['sqlite3', 'redis', 'mysql'];
 
     if (!this.#supportedDrivers.includes(driverName)) {
-      throw new Error('Driver not supported');
+      throw new Error(`Driver not supported: ${driverName}`);
     }
 
     const drivers = {};

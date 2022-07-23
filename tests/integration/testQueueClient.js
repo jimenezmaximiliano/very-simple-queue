@@ -83,15 +83,16 @@ test.onFinish(() => {
   drivers.forEach(async (driver) => driver.cleanUp());
 });
 
-drivers.forEach((driver) => {
+drivers.forEach(async (driver) => {
   test(`[${driver.name}] push a job and handle it`, async (assert) => {
     const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     const jobUuid = await queueClient.pushJob({ name: 'Obladi' });
-    await queueClient.handleJob((payload) => assert.equal(payload.name, 'Obladi'));
-
+    await queueClient.handleJob((payload) =>
+      assert.equal(payload.name, 'Obladi')
+    );
     assert.equal(typeof jobUuid === 'string', true);
-
+    assert.plan(2);
     await driverInstance.closeConnection();
   });
 
@@ -100,17 +101,17 @@ drivers.forEach((driver) => {
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     await queueClient.pushJob({ name: 'Obladi' });
     await queueClient.handleJob((payload) => assert.equal(payload.name, 'Obladi'));
-    await queueClient.handleJob((job) => assert.equal(job, null));
+    await queueClient.handleJob(() => assert.fail("it should not handle a null job"));
     await driverInstance.closeConnection();
+    assert.plan(1);
   });
 
   test(`[${driver.name}] the handler is not called when there aren't any jobs available`, async (assert) => {
     const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     await queueClient.handleJob(() => assert.fail('Job handler called'));
-
     assert.pass('Job handler not called');
-
+    assert.plan(1);
     await driverInstance.closeConnection();
   });
 
@@ -119,9 +120,8 @@ drivers.forEach((driver) => {
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     await queueClient.pushJob({ obladi: 'oblada' });
     const result = await queueClient.handleJob(() => ({ obladi: 'oblada' }));
-
     assert.equals(result.obladi, 'oblada');
-
+    assert.plan(1);
     await driverInstance.closeConnection();
   });
 
@@ -156,9 +156,8 @@ drivers.forEach((driver) => {
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     const jobUuid = await queueClient.pushJob({ do: 'something' });
     const result = await queueClient.handleJobByUuid(() => ({ obladi: 'oblada' }), jobUuid);
-
     assert.equals(result.obladi, 'oblada');
-
+    assert.plan(1);
     await driverInstance.closeConnection();
   });
 
@@ -166,15 +165,13 @@ drivers.forEach((driver) => {
     const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     const result = await queueClient.handleJob(() => ({ obladi: 'oblada' }));
-
     assert.equals(result, null);
-
+    assert.plan(1);
     await driverInstance.closeConnection();
   });
 
   test(`[${driver.name}] work on queue until the last job is done`, async (assert) => {
     assert.plan(1);
-
     const driverInstance = await driver.resetAndGetInstance();
     const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
     await queueClient.pushJob({ name: 'Obladi' });
@@ -184,7 +181,6 @@ drivers.forEach((driver) => {
     }, {
       limit: 1,
     });
-
     await driverInstance.closeConnection();
   });
 });
