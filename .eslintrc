@@ -1,6 +1,9 @@
 {
-  "extends": "airbnb",
-  "parser":"babel-eslint",
+  "extends": ["airbnb", "prettier"],
+  "parser":"@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false
+  },
   "rules": {
     "class-methods-use-this": "warn",
     "no-restricted-syntax": "warn",

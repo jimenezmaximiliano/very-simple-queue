@@ -1,6 +1,6 @@
 {
   "name": "very-simple-queue",
-  "version": "1.3.6",
+  "version": "1.4.0",
   "author": "Max <20307236+jimenezmaximiliano@users.noreply.github.com>",
   "description": "Very Simple Queue is a job queue with a simple API and support for sqlite3, redis and mysql",
   "keywords": [
@@ -28,8 +28,8 @@
     "test": "node ./tests/integration/testQueueClient.js ./tests/unit/testWorker.js",
     "unit": "node ./tests/unit/testWorker.js",
     "docs": "jsdoc-to-markdown --heading-depth 3 --template README.hbs  --separators --example-lang js src/VerySimpleQueue.js src/types/Sqlite3DriverConfig.js src/types/JobHandler.js src/types/WorkerSettings.js > README.md",
-    "start-mysql": "docker run --name vsq-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql",
-    "stop-mysql": "docker kill vsq-mysql && docker rm vsq-mysql",
+    "start-mysql": "docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_ROOT_HOST='%' -d mysql/mysql-server",
+    "stop-mysql": "docker kill mysql && docker rm vsq-mysql",
     "start-redis": "docker run --name vsq-redis -d -p 6379:6379 redis",
     "stop-redis": "docker kill vsq-redis && docker rm vsq-redis",
     "test-manual-concurrency-single-thread": "./tests/manual/concurrency/singleThread.sh",
@@ -37,21 +37,25 @@
   },
   "dependencies": {
     "mysql2": "^2.1.0",
-    "redis": "^3.0.2",
+    "redis": "^4.2.0",
     "redlock": "^4.1.0",
     "sqlite3": "^5.0.3",
     "uuid": "^8.0.0"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "devDependencies": {
-    "babel-eslint": "^10.1.0",
-    "eslint": "^7.32.0",
+    "@babel/core": "^7.18.9",
+    "@babel/eslint-parser": "^7.18.9",
+    "eslint": "^8.20.0",
     "eslint-config-airbnb": "^18.1.0",
+    "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^4",
+    "prettier": "2.7.1",
     "tape": "^5.0.0",
     "testdouble": "^3.16.0"
   },

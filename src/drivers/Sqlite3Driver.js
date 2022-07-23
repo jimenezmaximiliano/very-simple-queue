@@ -1,25 +1,24 @@
-
 /**
  * @class
  * @implements Driver
  */
 class Sqlite3Driver {
-  #parseJobResult
+  #parseJobResult;
 
-  #getNewConnection
+  #getNewConnection;
 
-  #sharedConnection
+  #sharedConnection;
 
-  #setSharedConnection
+  #setSharedConnection;
 
-  #run
+  #run;
 
-  #getRow
+  #getRow;
 
-  #reserveJob
+  #reserveJob;
 
   /** @type module:helpers.getCurrentTimestamp */
-  #getCurrentTimestamp
+  #getCurrentTimestamp;
 
   /**
    * @param {Function} promisify
