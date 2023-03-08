@@ -5,7 +5,7 @@ if [[ "$1" == "redis" ]]; then
 fi
 
 if [[ "$1" == "mysql" ]]; then
-    docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -d mysql
+    docker run -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root -e MYSQL_ROOT_HOST='%' -d mysql/mysql-server
     sleep 20
 fi
 
