@@ -1,21 +1,31 @@
 name: CI
 on: [push, workflow_dispatch, pull_request_target]
 jobs:
-  build:
+  unit:
+    strategy:
+      matrix:
+        node: [ '14', '16', '18' ]
+    runs-on: 'ubuntu-latest'
+    name: Node ${{ matrix.node }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: yarn
+        run: yarn
+      - name: yarn run test-unit
+        run: yarn run test-unit
+  mysql:
     strategy:
       matrix:
         node: [ '14', '16', '18']
-        redis: [ '3', '4', '5', '6', '7' ]
         mysql: [ '5.6', '5.7', '8' ]
-        os: ['ubuntu-latest']
-    runs-on: ${{ matrix.os }}
-    name: Node ${{ matrix.node }} Redis ${{ matrix.redis }} Mysql ${{ matrix.mysql }} OS ${{ matrix.os }}
+    runs-on: 'ubuntu-latest'
+    name: Node ${{ matrix.node }} Mysql ${{ matrix.mysql }}
     steps:
-      - name: Setup Redis
-        uses: zhulik/redis-action@1.1.0
-        with:
-          redis version: ${{ matrix.redis }}
-          number of databases: 1
       - name: Setup Mysql
         uses: mirromutth/mysql-action@v1.1
         with:
@@ -30,5 +40,45 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: yarn
         run: yarn
-      - name: yarn run test
-        run: yarn run test
+      - name: yarn run test-mysql
+        run: yarn run test-mysql
+  redis:
+    strategy:
+      matrix:
+        node: [ '14', '16', '18' ]
+        redis: [ '3', '4', '5', '6', '7' ]
+    runs-on: 'ubuntu-latest'
+    name: Node ${{ matrix.node }} Redis ${{ matrix.redis }}
+    steps:
+      - name: Setup Redis
+        uses: zhulik/redis-action@1.1.0
+        with:
+          redis version: ${{ matrix.redis }}
+          number of databases: 1
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: yarn
+        run: yarn
+      - name: yarn run test-redis
+        run: yarn run test-redis
+  sqlite3:
+    strategy:
+      matrix:
+        node: [ '14', '16', '18' ]
+    runs-on: 'ubuntu-latest'
+    name: Node ${{ matrix.node }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node }}
+      - name: yarn
+        run: yarn
+      - name: yarn run test-sqlite3
+        run: yarn run test-sqlite3
