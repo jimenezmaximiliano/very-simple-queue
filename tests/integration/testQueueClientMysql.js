@@ -1,40 +1,12 @@
 const test = require('tape');
-const sqlite3 = require('sqlite3');
-const util = require('util');
-const fs = require('fs');
 const uuidGenerator = require('uuid').v4;
-const redis = require('redis');
-const RedLock = require('redlock');
 const mysql = require('mysql2/promise');
-const Sqlite3Driver = require('../../src/drivers/Sqlite3Driver');
 const MysqlDriver = require('../../src/drivers/MysqlDriver');
-const RedisDriver = require('../../src/drivers/RedisDriver');
 const QueueClient = require('../../src/QueueClient');
 const Worker = require('../../src/Worker');
 const getCurrentTimestamp = require('../../src/helpers/getCurrentTimestamp');
 
-const sqlite3FilePath = './tests/integration/temp/testdb.sqlite3';
-fs.closeSync(fs.openSync(sqlite3FilePath, 'w'));
-
 const drivers = [
-  {
-    name: 'Sqlite3 driver',
-    resetAndGetInstance: async () => {
-      const instance = new Sqlite3Driver(
-        util.promisify,
-        getCurrentTimestamp,
-        sqlite3,
-        { filePath: sqlite3FilePath },
-      );
-      await instance.createJobsDbStructure();
-      await instance.deleteAllJobs();
-
-      return instance;
-    },
-    cleanUp: async () => {
-      fs.unlinkSync(sqlite3FilePath);
-    },
-  },
   {
     name: 'Mysql driver',
     resetAndGetInstance: async () => {
@@ -58,21 +30,6 @@ const drivers = [
 
       await instance.createJobsDbStructure();
       await instance.deleteAllJobs();
-      return instance;
-    },
-    cleanUp: async () => {},
-  },
-  {
-    name: 'Redis driver',
-    resetAndGetInstance: async () => {
-      const instance = new RedisDriver(
-        getCurrentTimestamp,
-        redis,
-        {},
-        RedLock,
-      );
-      await instance.deleteAllJobs();
-
       return instance;
     },
     cleanUp: async () => {},

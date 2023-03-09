@@ -104,7 +104,7 @@ class MysqlDriver {
       const connection = await this.#getNewConnection();
       try {
         await this.#runWithConnection(connection, 'START TRANSACTION;', []);
-        const rawJob = await this.#runWithConnection(connection, `${selectQuery} FOR UPDATE SKIP LOCKED`, params);
+        const rawJob = await this.#runWithConnection(connection, `${selectQuery} FOR UPDATE`, params);
 
         if (!rawJob) {
           await this.#runWithConnection(connection, 'COMMIT', []);
