@@ -112,8 +112,8 @@ class VerySimpleQueue {
   }
 
   /**
-   * Handle one job on the given queue
-   * The job get's deleted if it doesn't fail and is marked a failed if it does
+   * Handle one job in the given queue.
+   * The job gets deleted if it doesn't fail, and is marked as failed if it does.
    *
    * @param {module:types.JobHandler} jobHandler - Function that will receive the payload
    * and handle the job
