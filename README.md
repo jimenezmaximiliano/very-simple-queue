@@ -67,7 +67,7 @@ await verySimpleQueue.work((payload) => console.log(payload), { queue: 'myQueue'
 After getting a signal to shut down your application, you can stop workers to grab another job like this:
 
 ```javascript
-await verySimpleQueue.shutdown();
+verySimpleQueue.shutdown();
 ```
 
 Existing jobs will be finished.
