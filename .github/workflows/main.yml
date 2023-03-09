@@ -19,6 +19,7 @@ jobs:
       - name: yarn run test-unit
         run: yarn run test-unit
   mysql:
+    needs: [unit]
     strategy:
       matrix:
         node: [ '14', '16', '18']
@@ -43,6 +44,7 @@ jobs:
       - name: yarn run test-mysql
         run: yarn run test-mysql
   redis:
+    needs: [unit, mysql]
     strategy:
       matrix:
         node: [ '14', '16', '18' ]
@@ -66,6 +68,7 @@ jobs:
       - name: yarn run test-redis
         run: yarn run test-redis
   sqlite3:
+    needs: [unit, mysql, redis]
     strategy:
       matrix:
         node: [ '14', '16', '18' ]
