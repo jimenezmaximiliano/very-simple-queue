@@ -62,6 +62,24 @@ await verySimpleQueue.work((payload) => console.log(payload), { queue: 'myQueue'
 }
 ```
 
+##### Graceful shutdown
+
+After getting a signal to shut down your application, you can stop workers to grab another job like this:
+
+```javascript
+await verySimpleQueue.shutdown();
+```
+
+Existing jobs will be finished.
+
+### Other functions
+
+#### Handle job by UUID
+
+```javascript
+await verySimpleQueue.handleJobByUuid((payload) => console.log(payload), 'myQueue', 'uuid');
+```
+
 #### Custom workers
 
 You can create custom workers using the provided functions to handle jobs. You only need a loop.

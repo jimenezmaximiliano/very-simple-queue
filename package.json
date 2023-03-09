@@ -35,7 +35,8 @@
     "start-redis": "docker run --name vsq-redis -d -p 6379:6379 redis",
     "stop-redis": "docker kill vsq-redis && docker rm vsq-redis",
     "test-manual-concurrency-single-thread": "./tests/manual/concurrency/singleThread.sh",
-    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh"
+    "test-manual-concurrency-multi-thread": "./tests/manual/concurrency/multiThread.sh",
+    "test-manual-shutdown": "./tests/manual/concurrency/shutdown.sh"
   },
   "dependencies": {
     "mysql2": "^3.0.1",
