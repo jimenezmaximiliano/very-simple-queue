@@ -2,6 +2,7 @@ name: CI
 on: [push, workflow_dispatch, pull_request_target]
 jobs:
   build:
+    concurrency: {{ github.head_ref ||  github.ref }}
     strategy:
       matrix:
         node: [ '14', '16', '18']

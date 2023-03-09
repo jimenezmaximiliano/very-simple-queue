@@ -10,6 +10,10 @@ class MysqlDriver {
 
   #run
 
+  #runWithConnection
+
+  #parseQueryResults
+
   #reserveJob
 
   /** @type module:helpers.getCurrentTimestamp */
@@ -44,17 +48,10 @@ class MysqlDriver {
     this.#getNewConnection = async () => mysql.createConnection(driverConfig);
 
     /**
-     * @param {string} query
-     * @param {Array} [params=[]]
-     * @returns {Promise<void>}
+     * @param {Array|null} results
+     * @returns {*|null}
      */
-    this.#run = async (query, params = []) => {
-      const connection = await this.#getNewConnection();
-      const results = params.length === 0
-        ? await connection.query(query) : await connection.execute(query, params);
-
-      await connection.end();
-
+    this.#parseQueryResults = (results) => {
       if (!results) {
         return null;
       }
@@ -68,6 +65,34 @@ class MysqlDriver {
       }
 
       return results[0];
+    }
+
+    /**
+     * @param {string} query
+     * @param {Array} [params=[]]
+     * @returns {Promise<void>}
+     */
+    this.#run = async (query, params = []) => {
+      const connection = await this.#getNewConnection();
+      const results = params.length === 0
+        ? await connection.query(query) : await connection.execute(query, params);
+
+      await connection.end();
+
+      return this.#parseQueryResults(results);
+    };
+
+    /**
+     * @param {Object} connection
+     * @param {string} query
+     * @param {Array} [params=[]]
+     * @returns {Promise<void>}
+     */
+    this.#runWithConnection = async (connection, query, params = []) => {
+      const results = params.length === 0
+        ? await connection.query(query) : await connection.execute(query, params);
+
+      return this.#parseQueryResults(results);
     };
 
     /**
@@ -76,22 +101,26 @@ class MysqlDriver {
      * @returns {Promise<module:types.Job|null>}
      */
     this.#reserveJob = async (selectQuery, params) => {
+      const connection = await this.#getNewConnection();
       try {
-        await this.#run('START TRANSACTION;');
-        const rawJob = await this.#run(`${selectQuery} FOR UPDATE`, params);
+        await this.#runWithConnection(connection, 'START TRANSACTION;', []);
+        const rawJob = await this.#runWithConnection(connection, `${selectQuery} FOR UPDATE SKIP LOCKED`, params);
 
         if (!rawJob) {
-          await this.#run('COMMIT', []);
+          await this.#runWithConnection(connection, 'COMMIT', []);
+          await connection.end()
           return null;
         }
 
         const job = this.#parseJobResult(rawJob);
         const timestamp = this.#getCurrentTimestamp();
-        await this.#run(`UPDATE jobs SET reserved_at = ${timestamp} WHERE uuid = "${job.uuid}"`, []);
-        await this.#run('COMMIT', []);
+        await this.#runWithConnection(connection, `UPDATE jobs SET reserved_at = ${timestamp} WHERE uuid = "${job.uuid}"`, []);
+        await this.#runWithConnection(connection, 'COMMIT', []);
+        await connection.end()
         return job;
       } catch (error) {
-        await this.#run('ROLLBACK', []);
+        await this.#runWithConnection(connection, 'ROLLBACK', []);
+        await connection.end()
         return null;
       }
     };
@@ -133,7 +162,7 @@ class MysqlDriver {
    * @returns {Promise<module:types.Job|null>}
    */
   async getJob(queue) {
-    const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL LIMIT 1';
+    const query = 'SELECT * FROM jobs WHERE queue = ? AND failed_at IS NULL AND reserved_at IS NULL ORDER BY RAND() LIMIT 1';
     return this.#reserveJob(query, [queue]);
   }
 
