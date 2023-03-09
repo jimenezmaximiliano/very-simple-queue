@@ -136,4 +136,17 @@ drivers.forEach(async (driver) => {
     });
     await driverInstance.closeConnection();
   });
+
+  test(`[${driver.name}] don't work on the queue if you get the shutdown signal`, async (assert) => {
+    assert.plan(0);
+    const driverInstance = await driver.resetAndGetInstance();
+    const queueClient = new QueueClient(driverInstance, uuidGenerator, getCurrentTimestamp, new Worker());
+    await queueClient.pushJob({ name: 'Obladi' });
+    await queueClient.pushJob({ name: 'Obladi' });
+    queueClient.shutdown();
+    await queueClient.work((payload) => {
+      assert.equal(payload.name, 'Obladi');
+    }, {});
+    await driverInstance.closeConnection();
+  });
 });

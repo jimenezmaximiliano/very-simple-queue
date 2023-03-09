@@ -192,6 +192,15 @@ class VerySimpleQueue {
   async work(jobHandler, settings) {
     await this.#queueClient.work(jobHandler, settings);
   }
+
+  /**
+   * Signals the workers to stop working after they have finished with the current job.
+   *
+   * @returns {void}
+   */
+  shutdown() {
+    this.#queueClient.shutdown();
+  }
 }
 
 module.exports = VerySimpleQueue;
