@@ -1,5 +1,5 @@
 name: CI
-on: [push, workflow_dispatch, pull_request_target]
+on: [push, workflow_dispatch]
 jobs:
   unit:
     strategy:
@@ -9,9 +9,9 @@ jobs:
     name: Node ${{ matrix.node }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: yarn
@@ -34,9 +34,9 @@ jobs:
           mysql database: 'queue'
           mysql root password: 'root'
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: yarn
@@ -58,9 +58,9 @@ jobs:
           redis version: ${{ matrix.redis }}
           number of databases: 1
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: yarn
@@ -76,9 +76,9 @@ jobs:
     name: Node ${{ matrix.node }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
       - name: yarn
