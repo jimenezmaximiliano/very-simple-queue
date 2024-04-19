@@ -39,20 +39,20 @@
     "test-manual-shutdown": "./tests/manual/concurrency/shutdown.sh"
   },
   "dependencies": {
-    "mysql2": "^3.0.1",
-    "redis": "^4.2.0",
-    "redlock": "^4.1.0",
-    "sqlite3": "^5.0.3",
-    "uuid": "^9.0.0"
+    "mysql2": "^3.9.6",
+    "redis": "^4.6.13",
+    "redlock": "^5.0.0-beta.2",
+    "sqlite3": "^5.1.7",
+    "uuid": "^9.0.1"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=20"
   },
   "devDependencies": {
     "@babel/core": "^7.18.9",
     "@babel/eslint-parser": "^7.18.9",
-    "eslint": "^8.20.0",
-    "eslint-config-airbnb": "^18.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
@@ -60,7 +60,7 @@
     "eslint-plugin-react-hooks": "^4",
     "prettier": "3.2.5",
     "tape": "^5.0.0",
-    "testdouble": "^3.16.0"
+    "testdouble": "^3.20.2"
   },
   "main": "index.js",
   "files": [
